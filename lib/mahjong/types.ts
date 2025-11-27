@@ -1,3 +1,5 @@
+import { GameMessage } from './helper';
+
 export type Suit = 'bamboo' | 'character' | 'dot' | 'wind' | 'dragon';
 
 export type TileType = {
@@ -42,7 +44,5 @@ export type GameState = {
   winner: PlayerIndex | null;
   winningHand: TileType[] | null;
   gamePhase: GamePhase;
-  message: string;
+  message: GameMessage; // Changed from string to structured object
 };
-
-

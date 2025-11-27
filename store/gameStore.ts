@@ -1,14 +1,15 @@
 import { create } from 'zustand';
 import { TileType, GameState, Player, PlayerIndex, TurnPhase, Meld } from '@/lib/mahjong/types';
 import { generateDeck, TILES_COUNT } from '@/lib/mahjong/constants';
-import { shuffleDeck, sortHand, checkWin, canPong, canKong, canChow } from '@/lib/mahjong/utils';
+import { shuffleDeck, sortHand, sortHandAdvanced, checkWin, canPong, canKong, canChow } from '@/lib/mahjong/utils';
 import { decideAiAction } from '@/lib/mahjong/ai';
+import { getTileNameKey } from '@/lib/mahjong/helper';
 
 interface GameStore extends GameState {
   initGame: () => void;
   drawTile: () => void;
   discardTile: (tileId: string) => void;
-  playerAction: (action: 'pong' | 'kong' | 'chow' | 'win' | 'pass', selectedTiles?: string[]) => void; // Added selectedTiles for Chow if needed (simplified to auto-detect for now)
+  playerAction: (action: 'pong' | 'kong' | 'chow' | 'win' | 'pass' | 'sort', selectedTiles?: string[]) => void; 
   resetGame: () => void;
 }
 
@@ -31,7 +32,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   winner: null,
   winningHand: null,
   gamePhase: 'finished',
-  message: 'Welcome to Mahjong!',
+  message: { key: 'welcome' },
 
   initGame: () => {
     const deck = shuffleDeck(generateDeck());
@@ -65,7 +66,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       lastDiscardBy: null,
       winner: null,
       winningHand: null,
-      message: 'Game Started. East wind turn.',
+      message: { key: 'gameStarted' },
     });
 
     get().drawTile();
@@ -78,7 +79,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   drawTile: () => {
     const { deck, currentPlayer, players } = get();
     if (deck.length === 0) {
-      set({ gamePhase: 'finished', message: 'Draw! No more tiles.' });
+      set({ gamePhase: 'finished', message: { key: 'draw' } });
       return;
     }
 
@@ -86,13 +87,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newPlayers = players.map(p => ({...p, hand: [...p.hand]}));
     newPlayers[currentPlayer].hand.push(tile);
     
-    set({ deck, players: newPlayers, turnPhase: 'discard', message: `Player ${currentPlayer} drew a tile.` });
+    set({ 
+        deck, 
+        players: newPlayers, 
+        turnPhase: 'discard', 
+        message: { key: 'playerDrew', params: { index: currentPlayer } } 
+    });
 
     const player = newPlayers[currentPlayer];
     
     if (!player.isAi) {
          if (checkWin(player.hand)) {
-             set({ message: 'Tsumo! You can Win!' });
+             set({ message: { key: 'tsumoCanWin' } });
          }
     }
 
@@ -106,7 +112,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
                     gamePhase: 'finished', 
                     winner: currentPlayer, 
                     winningHand: player.hand,
-                    message: `Player ${currentPlayer} Tsumo!` 
+                    message: { key: 'playerTsumo', params: { index: currentPlayer } } 
                 });
            }
         }, 1000);
@@ -125,12 +131,42 @@ export const useGameStore = create<GameStore>((set, get) => ({
     p.hand = sortHand(p.hand);
     p.discards.push(tile);
 
+    const tileName = getTileNameKey(tile);
+    // Construct message. Note: We just store the tile key, we will translate later.
+    // But params only support string/number.
+    // Let's use a special format or just pass the key?
+    // Actually, we need to translate the tile name in the UI.
+    // So we pass the tile key as a param?
+    // Or pass {tile} as a param which is the translation key?
+    // Let's assume params can be keys for other translations or just values.
+    // For simplicity, we will assume the UI can handle nested translation or we pass a string representation.
+    // Wait, `formatString` just replaces {key}.
+    // If we pass a key as value, it just prints the key.
+    // We need the UI to translate the param if it is a key? Too complex.
+    // Let's just pass the key and handle it in UI? No, `message` is a single object.
+    // Better: `message` is { key: 'playerDiscarded', params: { index: 1, tileKey: 'bamboo' ... } }?
+    // Let's simplify: We won't translate tile names in the log for now, or handle it specifically.
+    // Actually, let's just pass the tile string for now (e.g. 'bamboo-5') and maybe UI can pretty print it?
+    // Or just use the `getTileNameKey` logic in UI?
+    // Let's pass the tile description as a string for now.
+    // But wait, that breaks i18n.
+    // Let's store params with raw values, and let UI helper format it.
+    
+    // Updated strategy: Params can hold raw values.
+    // UI component `GameMessage` will render it.
+
     set({ 
       players: newPlayers, 
       lastDiscard: tile, 
       lastDiscardBy: currentPlayer,
       turnPhase: 'claim',
-      message: `Player ${currentPlayer} discarded ${tile.suit} ${tile.value}`
+      message: { 
+          key: 'playerDiscarded', 
+          params: { 
+              index: currentPlayer, 
+              tile: `${tile.suit} ${tile.value}` // Fallback
+          } 
+      }
     });
 
     const human = newPlayers[0];
@@ -142,7 +178,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const canC = (currentPlayer === 3) && canChow(human.hand, tile);
 
         if (canRon || canP || canK || canC) {
-            set({ message: `Claim tile?` });
+            set({ message: { key: 'claimTile' } });
             return;
         }
     }
@@ -156,9 +192,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   playerAction: (action) => {
       const { players, lastDiscard, lastDiscardBy } = get();
-      if (!lastDiscard && action !== 'win') return; // Only win allows non-discard action (Tsumo)
+      
+      if (action === 'sort') {
+        const newPlayers = players.map(p => ({...p, hand: [...p.hand]}));
+        newPlayers[0].hand = sortHandAdvanced(newPlayers[0].hand);
+        set({ players: newPlayers });
+        return;
+      }
 
-      // Deep copy
+      if (!lastDiscard && action !== 'win') return; 
+
       const newPlayers = players.map(p => ({
           ...p, 
           hand: [...p.hand], 
@@ -169,7 +212,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       if (action === 'pass') {
           const nextPlayer = (lastDiscardBy! + 1) % 4;
-          set({ currentPlayer: nextPlayer as PlayerIndex, turnPhase: 'draw', message: 'Passed.' });
+          set({ currentPlayer: nextPlayer as PlayerIndex, turnPhase: 'draw', message: { key: 'passed' } });
           get().drawTile();
           return;
       }
@@ -180,7 +223,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
               gamePhase: 'finished', 
               winner: 0, 
               winningHand: human.hand,
-              message: lastDiscard ? `You Win (Ron)!` : `You Win (Tsumo)!`
+              message: { key: lastDiscard ? 'youWinRon' : 'youWinTsumo' }
           });
           return;
       }
@@ -199,11 +242,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         human.melds.push({ type: 'pong', tiles: [...match, lastDiscard] });
         newPlayers[lastDiscardBy!].discards.pop();
         
-        set({ players: newPlayers, currentPlayer: 0, turnPhase: 'discard', lastDiscard: null, message: 'Pong!' });
+        set({ players: newPlayers, currentPlayer: 0, turnPhase: 'discard', lastDiscard: null, message: { key: 'pong' } });
       }
 
       if (action === 'kong') {
-          // Exposed Kong
           const match = human.hand.filter(t => t.suit === lastDiscard.suit && t.value === lastDiscard.value).slice(0, 3);
           if (match.length < 3) return;
 
@@ -215,41 +257,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
           human.melds.push({ type: 'kong', tiles: [...match, lastDiscard] });
           newPlayers[lastDiscardBy!].discards.pop();
 
-          // Kong requires drawing a replacement tile
-          set({ players: newPlayers, currentPlayer: 0, turnPhase: 'draw', lastDiscard: null, message: 'Kong! Draw replacement.' });
+          set({ players: newPlayers, currentPlayer: 0, turnPhase: 'draw', lastDiscard: null, message: { key: 'kongReplacement' } });
           get().drawTile(); 
           return;
       }
 
       if (action === 'chow') {
-          // Simplified Chow: Auto-detect the sequence
-          // If multiple sequences possible (e.g. 2,3,4,5,6 and discard 4 -> 2,3,4 or 4,5,6 or 3,4,5)
-          // For simplicity: Pick the first valid sequence.
-          
           const v = lastDiscard.value;
           const s = lastDiscard.suit;
           
-          // Candidates
           const find = (offset: number) => human.hand.find(t => t.suit === s && t.value === v + offset);
           
           let tilesToEat: TileType[] | null = null;
           
-          // Try v-2, v-1
           const m2 = find(-2);
           const m1 = find(-1);
           if (m2 && m1) tilesToEat = [m2, m1];
           else {
-              // Try v-1, v+1
               const p1 = find(1);
               if (m1 && p1) tilesToEat = [m1, p1];
               else {
-                  // Try v+1, v+2
                   const p2 = find(2);
                   if (p1 && p2) tilesToEat = [p1, p2];
               }
           }
 
-          if (!tilesToEat) return; // No chow possible
+          if (!tilesToEat) return;
 
           tilesToEat.forEach(m => {
               const idx = human.hand.findIndex(t => t.id === m.id);
@@ -259,7 +292,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           human.melds.push({ type: 'chow', tiles: [...tilesToEat, lastDiscard].sort((a,b) => a.value - b.value) });
           newPlayers[lastDiscardBy!].discards.pop();
 
-          set({ players: newPlayers, currentPlayer: 0, turnPhase: 'discard', lastDiscard: null, message: 'Chow!' });
+          set({ players: newPlayers, currentPlayer: 0, turnPhase: 'discard', lastDiscard: null, message: { key: 'chow' } });
       }
   }
 

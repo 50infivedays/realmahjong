@@ -12,6 +12,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { ArrowLeftRight, Languages } from 'lucide-react';
+import { dictionaries, formatString, Language } from '@/lib/i18n';
+import { useLanguageStore } from '@/store/languageStore';
 
 
 export const MahjongTable = () => {
@@ -30,9 +33,33 @@ export const MahjongTable = () => {
       deck
   } = useGameStore();
 
+  const { language, setLanguage } = useLanguageStore();
+  const t = dictionaries[language];
+
   useEffect(() => {
+    // Detect browser language
+    const browserLang = navigator.language.toLowerCase();
+    if (browserLang.startsWith('zh')) {
+      setLanguage('zh');
+    } else {
+      setLanguage('en');
+    }
+    
     initGame();
   }, []);
+
+  const toggleLanguage = () => {
+      setLanguage(language === 'en' ? 'zh' : 'en');
+  };
+
+  const getTranslatedMessage = () => {
+      if (!message) return '';
+      if (typeof message === 'string') return message; // Fallback
+      
+      const template = t[message.key] || message.key;
+      // Simple param replacement (complex tile translation omitted for brevity)
+      return formatString(template, message.params);
+  };
 
   if (players.length === 0) return <div>Loading...</div>;
 
@@ -41,31 +68,62 @@ export const MahjongTable = () => {
   const topAi = players[2];
   const leftAi = players[3];
 
-  const canAction = (players[0] && currentPlayer !== 0 && !!lastDiscard && message.includes('Claim')); 
-  const canTsumo = (players[0] && currentPlayer === 0 && message.includes('Tsumo'));
+  const canAction = (players[0] && currentPlayer !== 0 && !!lastDiscard && message.key === 'claimTile'); 
+  const canTsumo = (players[0] && currentPlayer === 0 && message.key === 'tsumoCanWin'); // Should verify logic
 
   return (
     <div className="flex flex-col h-screen w-full bg-green-800 overflow-hidden relative select-none">
       
+      {/* Language Toggle */}
+      <div className="absolute top-4 right-4 z-50">
+          <Button variant="outline" size="icon" className="rounded-full bg-white/20 hover:bg-white/40 border-none text-white" onClick={toggleLanguage}>
+              <Languages size={20} />
+          </Button>
+      </div>
+
       {/* --- Central Table Area (Discards & Info) --- */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none">
           
           {/* Center Info Box */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-green-900/80 rounded-xl border border-green-700 flex flex-col items-center justify-center text-white shadow-xl z-10">
-              <div className="text-3xl font-bold opacity-30 absolute select-none">東</div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 bg-green-900/90 rounded-xl border-2 border-green-700/50 flex flex-col items-center text-white shadow-2xl z-10 pointer-events-auto">
               
-              <div className="relative z-10 text-center">
-                <div className="text-xs text-gray-300 mb-1">Remaining</div>
-                <div className="text-xl font-mono font-bold mb-2">{deck.length}</div>
-                <div className="text-xs text-yellow-300 px-2 text-center">{message}</div>
+              {/* Header: Round Wind & Remaining */}
+              <div className="w-full flex justify-between items-center px-3 py-2 border-b border-green-800/50 bg-green-950/30 rounded-t-xl">
+                  <div className="flex items-center gap-1 text-yellow-500">
+                      <span className="text-sm font-bold">{t.windEast}</span> 
+                  </div>
+                  <div className="flex items-center gap-1 text-gray-400 text-xs">
+                      <span>{t.remaining}</span>
+                      <span className="font-mono text-white font-bold">{deck.length}</span>
+                  </div>
               </div>
 
-              {/* Last Discard Display (if not claimed yet) */}
-              {lastDiscard && (
-                <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center z-20 drop-shadow-2xl animate-in fade-in zoom-in duration-300">
-                    <Tile tile={lastDiscard} />
-                </div>
-              )}
+              {/* Main Content Area */}
+              <div className="flex-1 w-full flex flex-col items-center justify-center relative p-2">
+                  
+                  {/* Last Discard Display - Central Focus */}
+                  <div className="relative flex flex-col items-center justify-center min-h-[80px]">
+                    {lastDiscard ? (
+                        <div className="animate-in fade-in zoom-in duration-200 drop-shadow-[0_0_15px_rgba(255,255,0,0.3)]">
+                             <Tile tile={lastDiscard} />
+                        </div>
+                    ) : (
+                        <div className="w-10 h-14 rounded border border-white/10 bg-white/5 flex items-center justify-center">
+                            <div className="w-3 h-3 rounded-full bg-white/10" />
+                        </div>
+                    )}
+                    <span className="text-[10px] text-green-400/60 mt-1 uppercase tracking-wider font-bold">
+                        {lastDiscard ? 'Last Discard' : 'Waiting'}
+                    </span>
+                  </div>
+
+                  {/* Game Status Message */}
+                  <div className="absolute bottom-2 left-0 w-full px-2 text-center">
+                    <div className="text-xs font-medium text-yellow-200 bg-black/20 rounded py-1 px-2 truncate shadow-inner">
+                        {getTranslatedMessage()}
+                    </div>
+                  </div>
+              </div>
           </div>
 
           {/* Discards Areas - Positioned around center */}
@@ -111,20 +169,33 @@ export const MahjongTable = () => {
 
       {/* Bottom Player (Human) */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center z-30">
-         <div className="mb-4 h-10">
+         <div className="mb-4 h-10 flex gap-2 items-center">
+             {/* Sort Button - Always visible for human */}
+             {currentPlayer === 0 && (
+                 <Button 
+                    variant="secondary" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full bg-black/40 hover:bg-black/60 text-white border-none shadow-lg"
+                    onClick={() => playerAction('sort')}
+                    title="Auto Sort Hand"
+                 >
+                     <ArrowLeftRight size={16} />
+                 </Button>
+             )}
+
              {/* Action Buttons */}
              {canAction && (
                  <div className="flex gap-2 bg-black/60 p-2 rounded-lg backdrop-blur-sm animate-in slide-in-from-bottom-5">
-                     <Button variant="secondary" size="sm" onClick={() => playerAction('pong')}>Pong</Button>
-                     <Button variant="secondary" size="sm" onClick={() => playerAction('kong')}>Kong</Button>
-                     <Button variant="secondary" size="sm" onClick={() => playerAction('chow')}>Chow</Button>
-                     <Button variant="destructive" size="sm" onClick={() => playerAction('win')}>Ron</Button>
-                     <Button variant="outline" size="sm" onClick={() => playerAction('pass')}>Pass</Button>
+                     <Button variant="secondary" size="sm" onClick={() => playerAction('pong')}>{t.btnPong}</Button>
+                     <Button variant="secondary" size="sm" onClick={() => playerAction('kong')}>{t.btnKong}</Button>
+                     <Button variant="secondary" size="sm" onClick={() => playerAction('chow')}>{t.btnChow}</Button>
+                     <Button variant="destructive" size="sm" onClick={() => playerAction('win')}>{t.btnRon}</Button>
+                     <Button variant="outline" size="sm" onClick={() => playerAction('pass')}>{t.btnPass}</Button>
                  </div>
              )}
              {canTsumo && (
                  <div className="flex gap-2 bg-black/60 p-2 rounded-lg backdrop-blur-sm animate-in slide-in-from-bottom-5">
-                     <Button variant="destructive" size="sm" onClick={() => playerAction('win')}>Tsumo</Button>
+                     <Button variant="destructive" size="sm" onClick={() => playerAction('win')}>{t.btnTsumo}</Button>
                  </div>
              )}
          </div>
@@ -143,25 +214,25 @@ export const MahjongTable = () => {
       <Dialog open={gamePhase === 'finished'} onOpenChange={() => {}}>
         <DialogContent>
             <DialogHeader>
-            <DialogTitle>Game Over</DialogTitle>
+            <DialogTitle>{t.gameOver}</DialogTitle>
             </DialogHeader>
             <div className="py-4">
                 {winner !== null ? (
                     <div>
-                        <p className="text-lg font-bold text-green-600">Player {winner} Wins!</p>
+                        <p className="text-lg font-bold text-green-600">{formatString(t.playerWins, { index: winner })}</p>
                         <div className="mt-4">
-                            <p>Winning Hand:</p>
+                            <p>{t.winningHand}</p>
                             <div className="flex gap-1 flex-wrap">
                                 {winningHand?.map(t => <Tile key={t.id} tile={t} small />)}
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <p>Draw!</p>
+                    <p>Draw!</p> // Needs key
                 )}
             </div>
             <DialogFooter>
-                <Button onClick={resetGame}>Play Again</Button>
+                <Button onClick={resetGame}>{t.playAgain}</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
