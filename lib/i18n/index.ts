@@ -37,7 +37,14 @@ export type TranslationKey =
   | 'windNorth'
   | 'dragonRed'
   | 'dragonGreen'
-  | 'dragonWhite';
+  | 'dragonWhite'
+  | 'navHome'
+  | 'navGame'
+  | 'homeTitle'
+  | 'homeSubtitle'
+  | 'homeDescription'
+  | 'homeStartBtn'
+  | 'footerCopyright';
 
 export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
   en: {
@@ -78,6 +85,13 @@ export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     dragonRed: 'Red',
     dragonGreen: 'Green',
     dragonWhite: 'White',
+    navHome: 'Home',
+    navGame: 'Game',
+    homeTitle: 'Real Mahjong',
+    homeSubtitle: 'Authentic Riichi Experience',
+    homeDescription: 'Play traditional Riichi Mahjong online against intelligent AI opponents. No download required, just pure strategy and skill.',
+    homeStartBtn: 'Start Game',
+    footerCopyright: 'RealMahjong. All rights reserved.',
   },
   zh: {
     welcome: '欢迎来到麻将游戏！',
@@ -117,6 +131,13 @@ export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     dragonRed: '中',
     dragonGreen: '发',
     dragonWhite: '白',
+    navHome: '首页',
+    navGame: '游戏',
+    homeTitle: '真实麻将',
+    homeSubtitle: '纯粹的日麻体验',
+    homeDescription: '在线体验传统日式立直麻将，与智能AI对手一决高下。无需下载，点击即玩，尽享策略与技巧的乐趣。',
+    homeStartBtn: '开始游戏',
+    footerCopyright: '真实麻将. 保留所有权利.',
   }
 };
 
@@ -126,4 +147,3 @@ export const formatString = (template: string, params?: Record<string, string | 
     return acc.replace(`{${key}}`, String(value));
   }, template);
 };
-

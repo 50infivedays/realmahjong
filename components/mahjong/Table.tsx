@@ -12,10 +12,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { ArrowLeftRight, Languages } from 'lucide-react';
-import { dictionaries, formatString, Language } from '@/lib/i18n';
+import { ArrowLeftRight } from 'lucide-react';
+import { dictionaries, formatString } from '@/lib/i18n';
 import { useLanguageStore } from '@/store/languageStore';
-import { ActionOptions, ChiOption, GangOption, TileType } from '@/lib/mahjong/types';
 
 
 export const MahjongTable = () => {
@@ -35,26 +34,15 @@ export const MahjongTable = () => {
       actionOptions
   } = useGameStore();
 
-  const { language, setLanguage } = useLanguageStore();
+  const { language } = useLanguageStore();
   const t = dictionaries[language];
 
   const [showChiSelection, setShowChiSelection] = useState(false);
   const [showGangSelection, setShowGangSelection] = useState(false);
 
   useEffect(() => {
-    const browserLang = navigator.language.toLowerCase();
-    if (browserLang.startsWith('zh')) {
-      setLanguage('zh');
-    } else {
-      setLanguage('en');
-    }
-    
     initGame();
   }, []);
-
-  const toggleLanguage = () => {
-      setLanguage(language === 'en' ? 'zh' : 'en');
-  };
 
   const getTranslatedMessage = () => {
       if (!message) return '';
@@ -99,15 +87,8 @@ export const MahjongTable = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-full bg-green-800 overflow-hidden relative select-none">
+    <div className="flex flex-col h-full w-full bg-green-800 overflow-hidden relative select-none">
       
-      {/* Language Toggle */}
-      <div className="absolute top-4 right-4 z-50">
-          <Button variant="outline" size="icon" className="rounded-full bg-white/20 hover:bg-white/40 border-none text-white" onClick={toggleLanguage}>
-              <Languages size={20} />
-          </Button>
-      </div>
-
       {/* --- Central Table Area (Discards & Info) --- */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none">
           
