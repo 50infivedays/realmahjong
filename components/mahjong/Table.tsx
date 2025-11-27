@@ -45,55 +45,86 @@ export const MahjongTable = () => {
   const canTsumo = (players[0] && currentPlayer === 0 && message.includes('Tsumo'));
 
   return (
-    <div className="flex flex-col h-screen w-full bg-green-800 overflow-hidden relative">
+    <div className="flex flex-col h-screen w-full bg-green-800 overflow-hidden relative select-none">
       
+      {/* --- Central Table Area (Discards & Info) --- */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none">
+          
+          {/* Center Info Box */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-green-900/80 rounded-xl border border-green-700 flex flex-col items-center justify-center text-white shadow-xl z-10">
+              <div className="text-3xl font-bold opacity-30 absolute select-none">東</div>
+              
+              <div className="relative z-10 text-center">
+                <div className="text-xs text-gray-300 mb-1">Remaining</div>
+                <div className="text-xl font-mono font-bold mb-2">{deck.length}</div>
+                <div className="text-xs text-yellow-300 px-2 text-center">{message}</div>
+              </div>
+
+              {/* Last Discard Display (if not claimed yet) */}
+              {lastDiscard && (
+                <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center z-20 drop-shadow-2xl animate-in fade-in zoom-in duration-300">
+                    <Tile tile={lastDiscard} />
+                </div>
+              )}
+          </div>
+
+          {/* Discards Areas - Positioned around center */}
+          
+          {/* Top (AI 2) - Rotated 180 */}
+          <div className="absolute top-10 left-1/2 -translate-x-1/2 rotate-180 w-[240px] flex justify-center">
+              <Discards tiles={topAi.discards} />
+          </div>
+
+          {/* Bottom (Human) */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[240px] flex justify-center">
+              <Discards tiles={human.discards} />
+          </div>
+
+          {/* Left (AI 3) - Rotated -90 */}
+          <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 -rotate-90 w-[240px] flex justify-center origin-center">
+              <Discards tiles={leftAi.discards} />
+          </div>
+
+           {/* Right (AI 1) - Rotated 90 */}
+           <div className="absolute right-[-20px] top-1/2 -translate-y-1/2 rotate-90 w-[240px] flex justify-center origin-center">
+              <Discards tiles={rightAi.discards} />
+          </div>
+
+      </div>
+
+      {/* --- Player Hands (Edges) --- */}
+
       {/* Top Player (AI 2) */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center rotate-180">
-         <Discards tiles={topAi.discards} />
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 rotate-180">
          <Hand tiles={topAi.hand} melds={topAi.melds} hidden />
       </div>
 
       {/* Left Player (AI 3) */}
-      <div className="absolute left-10 top-1/2 -translate-y-1/2 flex flex-col items-center -rotate-90">
-         <Discards tiles={leftAi.discards} />
+      <div className="absolute left-12 top-1/2 -translate-y-1/2 -rotate-90 origin-center">
          <Hand tiles={leftAi.hand} melds={leftAi.melds} hidden />
       </div>
 
       {/* Right Player (AI 1) */}
-      <div className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-center rotate-90">
-         <Discards tiles={rightAi.discards} />
+      <div className="absolute right-12 top-1/2 -translate-y-1/2 rotate-90 origin-center">
          <Hand tiles={rightAi.hand} melds={rightAi.melds} hidden />
       </div>
 
-      {/* Center Info */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-900/50 p-4 rounded text-white text-center">
-         <h2 className="text-xl font-bold mb-2">Mahjong</h2>
-         <div className="text-sm mb-2">{message}</div>
-         <div className="text-xs text-gray-300">Tiles left: {deck.length}</div>
-         {lastDiscard && (
-             <div className="mt-4 flex flex-col items-center">
-                 <span className="text-xs mb-1">Last Discard</span>
-                 <Tile tile={lastDiscard} />
-             </div>
-         )}
-      </div>
-
       {/* Bottom Player (Human) */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center">
-         <div className="mb-4">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center z-30">
+         <div className="mb-4 h-10">
              {/* Action Buttons */}
              {canAction && (
-                 <div className="flex gap-2 bg-black/50 p-2 rounded">
-                     <Button variant="secondary" onClick={() => playerAction('pong')}>Pong</Button>
-                     <Button variant="secondary" onClick={() => playerAction('kong')}>Kong</Button>
-                     <Button variant="secondary" onClick={() => playerAction('chow')}>Chow</Button>
-                     <Button variant="destructive" onClick={() => playerAction('win')}>Ron (Win)</Button>
-                     <Button variant="outline" onClick={() => playerAction('pass')}>Pass</Button>
+                 <div className="flex gap-2 bg-black/60 p-2 rounded-lg backdrop-blur-sm animate-in slide-in-from-bottom-5">
+                     <Button variant="secondary" size="sm" onClick={() => playerAction('pong')}>Pong</Button>
+                     <Button variant="secondary" size="sm" onClick={() => playerAction('kong')}>Kong</Button>
+                     <Button variant="secondary" size="sm" onClick={() => playerAction('chow')}>Chow</Button>
+                     <Button variant="destructive" size="sm" onClick={() => playerAction('win')}>Ron</Button>
+                     <Button variant="outline" size="sm" onClick={() => playerAction('pass')}>Pass</Button>
                  </div>
              )}
              {canTsumo && (
-                 <div className="flex gap-2 bg-black/50 p-2 rounded">
-                     <Button variant="destructive" onClick={() => playerAction('win')}>Tsumo (Win)</Button>
+                 <div className="flex gap-2 bg-black/60 p-2 rounded-lg backdrop-blur-sm animate-in slide-in-from-bottom-5">
+                     <Button variant="destructive" size="sm" onClick={() => playerAction('win')}>Tsumo</Button>
                  </div>
              )}
          </div>
@@ -106,9 +137,6 @@ export const MahjongTable = () => {
                 if (currentPlayer === 0) discardTile(id);
             }}
          />
-         <div className="mt-2">
-            <Discards tiles={human.discards} />
-         </div>
       </div>
 
       {/* Game Over Dialog */}
