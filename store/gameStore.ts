@@ -87,6 +87,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newPlayers = players.map(p => ({...p, hand: [...p.hand]}));
     newPlayers[currentPlayer].hand.push(tile);
     
+    // Do NOT auto-sort the hand here for human player
+    // We want the new tile to be separate (at the end) until they sort or discard
+    // Only sort for AI? AI sorts automatically on its turn logic usually
+    // But for display consistency, let's keep AI sorted, but HUMAN not sorted for the last tile?
+    // `drawTile` adds to end. `sortHand` sorts it.
+    
+    // Current logic:
+    // newPlayers[currentPlayer].hand.push(tile); -> Added to end.
+    // We removed `p.hand = sortHand(p.hand)` inside drawTile in previous turns?
+    // Wait, line 88: `newPlayers[currentPlayer].hand.push(tile);`
+    // It is ALREADY at the end. We just need to ensure we don't call `sortHand` on it immediately.
+    // And we don't. `initGame` calls it, but `drawTile` does NOT call `sortHand`.
+    
+    // So the new tile IS at the end. The UI needs to separate it.
+    
     set({ 
         deck, 
         players: newPlayers, 
@@ -128,32 +143,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (tileIndex === -1) return;
 
     const tile = p.hand.splice(tileIndex, 1)[0];
+    
+    // Sort hand AFTER discard to fill the gap
+    // This gives the "merge" effect
     p.hand = sortHand(p.hand);
     p.discards.push(tile);
-
-    const tileName = getTileNameKey(tile);
-    // Construct message. Note: We just store the tile key, we will translate later.
-    // But params only support string/number.
-    // Let's use a special format or just pass the key?
-    // Actually, we need to translate the tile name in the UI.
-    // So we pass the tile key as a param?
-    // Or pass {tile} as a param which is the translation key?
-    // Let's assume params can be keys for other translations or just values.
-    // For simplicity, we will assume the UI can handle nested translation or we pass a string representation.
-    // Wait, `formatString` just replaces {key}.
-    // If we pass a key as value, it just prints the key.
-    // We need the UI to translate the param if it is a key? Too complex.
-    // Let's just pass the key and handle it in UI? No, `message` is a single object.
-    // Better: `message` is { key: 'playerDiscarded', params: { index: 1, tileKey: 'bamboo' ... } }?
-    // Let's simplify: We won't translate tile names in the log for now, or handle it specifically.
-    // Actually, let's just pass the tile string for now (e.g. 'bamboo-5') and maybe UI can pretty print it?
-    // Or just use the `getTileNameKey` logic in UI?
-    // Let's pass the tile description as a string for now.
-    // But wait, that breaks i18n.
-    // Let's store params with raw values, and let UI helper format it.
-    
-    // Updated strategy: Params can hold raw values.
-    // UI component `GameMessage` will render it.
 
     set({ 
       players: newPlayers, 
@@ -164,7 +158,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           key: 'playerDiscarded', 
           params: { 
               index: currentPlayer, 
-              tile: `${tile.suit} ${tile.value}` // Fallback
+              tile: `${tile.suit} ${tile.value}` 
           } 
       }
     });

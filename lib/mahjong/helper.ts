@@ -2,8 +2,8 @@ import { TileType } from '@/lib/mahjong/types';
 import { TranslationKey } from '@/lib/i18n';
 
 export type GameMessage = {
-  key: TranslationKey;
-  params?: Record<string, string | number>;
+    key: TranslationKey;
+    params?: Record<string, string | number>;
 };
 
 export const getTileNameKey = (tile: TileType): { key: TranslationKey, value?: string } => {
@@ -15,7 +15,7 @@ export const getTileNameKey = (tile: TileType): { key: TranslationKey, value?: s
         const dragons: TranslationKey[] = ['dragonRed', 'dragonGreen', 'dragonWhite'];
         return { key: dragons[tile.value - 1] };
     }
-    
+
     const suits: Record<string, TranslationKey> = {
         'bamboo': 'suitBamboo',
         'character': 'suitCharacter',
