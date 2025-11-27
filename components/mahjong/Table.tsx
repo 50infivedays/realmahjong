@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Hand } from './Hand';
 import { Discards } from './Discards';
@@ -15,6 +15,7 @@ import {
 import { ArrowLeftRight, Languages } from 'lucide-react';
 import { dictionaries, formatString, Language } from '@/lib/i18n';
 import { useLanguageStore } from '@/store/languageStore';
+import { ActionOptions, ChiOption, GangOption, TileType } from '@/lib/mahjong/types';
 
 
 export const MahjongTable = () => {
@@ -30,14 +31,17 @@ export const MahjongTable = () => {
       resetGame,
       winner,
       winningHand,
-      deck
+      deck,
+      actionOptions
   } = useGameStore();
 
   const { language, setLanguage } = useLanguageStore();
   const t = dictionaries[language];
 
+  const [showChiSelection, setShowChiSelection] = useState(false);
+  const [showGangSelection, setShowGangSelection] = useState(false);
+
   useEffect(() => {
-    // Detect browser language
     const browserLang = navigator.language.toLowerCase();
     if (browserLang.startsWith('zh')) {
       setLanguage('zh');
@@ -54,10 +58,9 @@ export const MahjongTable = () => {
 
   const getTranslatedMessage = () => {
       if (!message) return '';
-      if (typeof message === 'string') return message; // Fallback
+      if (typeof message === 'string') return message; 
       
       const template = t[message.key] || message.key;
-      // Simple param replacement (complex tile translation omitted for brevity)
       return formatString(template, message.params);
   };
 
@@ -68,8 +71,32 @@ export const MahjongTable = () => {
   const topAi = players[2];
   const leftAi = players[3];
 
-  const canAction = (players[0] && currentPlayer !== 0 && !!lastDiscard && message.key === 'claimTile'); 
-  const canTsumo = (players[0] && currentPlayer === 0 && message.key === 'tsumoCanWin'); // Should verify logic
+  // Action Button Handlers
+  const handleChiClick = () => {
+      if (actionOptions.canChi.length > 1) {
+          setShowChiSelection(true);
+      } else {
+          playerAction('chow', 0);
+      }
+  };
+
+  const handleGangClick = () => {
+      if (actionOptions.canGang.length > 1) {
+          setShowGangSelection(true);
+      } else {
+          playerAction('kong', 0);
+      }
+  };
+
+  const handleSelectChi = (index: number) => {
+      setShowChiSelection(false);
+      playerAction('chow', index);
+  };
+
+  const handleSelectGang = (index: number) => {
+      setShowGangSelection(false);
+      playerAction('kong', index);
+  };
 
   return (
     <div className="flex flex-col h-screen w-full bg-green-800 overflow-hidden relative select-none">
@@ -184,18 +211,39 @@ export const MahjongTable = () => {
              )}
 
              {/* Action Buttons */}
-             {canAction && (
+             {(actionOptions.canHu || actionOptions.canGang.length > 0 || actionOptions.canPeng || actionOptions.canChi.length > 0) && (
                  <div className="flex gap-2 bg-black/60 p-2 rounded-lg backdrop-blur-sm animate-in slide-in-from-bottom-5">
-                     <Button variant="secondary" size="sm" onClick={() => playerAction('pong')}>{t.btnPong}</Button>
-                     <Button variant="secondary" size="sm" onClick={() => playerAction('kong')}>{t.btnKong}</Button>
-                     <Button variant="secondary" size="sm" onClick={() => playerAction('chow')}>{t.btnChow}</Button>
-                     <Button variant="destructive" size="sm" onClick={() => playerAction('win')}>{t.btnRon}</Button>
+                     
+                     {/* HU Button */}
+                     {actionOptions.canHu && (
+                        <Button variant="destructive" size="sm" onClick={() => playerAction('win')}>
+                            {lastDiscard ? t.btnRon : t.btnTsumo}
+                        </Button>
+                     )}
+
+                     {/* GANG Button */}
+                     {actionOptions.canGang.length > 0 && (
+                        <Button variant="secondary" size="sm" onClick={handleGangClick}>
+                            {t.btnKong}
+                        </Button>
+                     )}
+
+                     {/* PENG Button */}
+                     {actionOptions.canPeng && (
+                        <Button variant="secondary" size="sm" onClick={() => playerAction('pong')}>
+                            {t.btnPong}
+                        </Button>
+                     )}
+
+                     {/* CHI Button */}
+                     {actionOptions.canChi.length > 0 && (
+                        <Button variant="secondary" size="sm" onClick={handleChiClick}>
+                            {t.btnChow}
+                        </Button>
+                     )}
+
+                     {/* PASS Button - Always show if actions available */}
                      <Button variant="outline" size="sm" onClick={() => playerAction('pass')}>{t.btnPass}</Button>
-                 </div>
-             )}
-             {canTsumo && (
-                 <div className="flex gap-2 bg-black/60 p-2 rounded-lg backdrop-blur-sm animate-in slide-in-from-bottom-5">
-                     <Button variant="destructive" size="sm" onClick={() => playerAction('win')}>{t.btnTsumo}</Button>
                  </div>
              )}
          </div>
@@ -205,34 +253,83 @@ export const MahjongTable = () => {
             melds={human.melds}
             isCurrentPlayer={currentPlayer === 0}
             onTileClick={(id) => {
-                if (currentPlayer === 0) discardTile(id);
+                if (currentPlayer === 0 && !actionOptions.canHu) discardTile(id);
             }}
          />
       </div>
 
-      {/* Game Over Dialog */}
-      <Dialog open={gamePhase === 'finished'} onOpenChange={() => {}}>
+      {/* Selection Dialogs */}
+      <Dialog open={showChiSelection} onOpenChange={setShowChiSelection}>
         <DialogContent>
             <DialogHeader>
-            <DialogTitle>{t.gameOver}</DialogTitle>
+                <DialogTitle>Choose Chow</DialogTitle>
             </DialogHeader>
-            <div className="py-4">
+            <div className="flex gap-4 justify-center py-4">
+                {actionOptions.canChi.map((opt, idx) => (
+                    <div 
+                        key={idx} 
+                        className="flex gap-1 p-2 border rounded cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSelectChi(idx)}
+                    >
+                        {opt.tiles.map(tile => <Tile key={tile.id} tile={tile} small />)}
+                    </div>
+                ))}
+            </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showGangSelection} onOpenChange={setShowGangSelection}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Choose Kong</DialogTitle>
+            </DialogHeader>
+            <div className="flex gap-4 justify-center py-4 flex-wrap">
+                {actionOptions.canGang.map((opt, idx) => (
+                    <div 
+                        key={idx} 
+                        className="flex flex-col items-center gap-1 p-2 border rounded cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSelectGang(idx)}
+                    >
+                        <div className="flex gap-1">
+                            {opt.tiles.map(tile => <Tile key={tile.id} tile={tile} small />)}
+                        </div>
+                        <span className="text-xs text-gray-500">{opt.type}</span>
+                    </div>
+                ))}
+            </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Game Over Dialog */}
+      <Dialog open={gamePhase === 'finished'} onOpenChange={() => {}}>
+        <DialogContent className="max-w-[95vw] w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl h-auto overflow-y-auto p-4 sm:p-6"> 
+            <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center">{t.gameOver}</DialogTitle>
+            </DialogHeader>
+            <div className="py-2 sm:py-6 flex flex-col items-center w-full">
                 {winner !== null ? (
-                    <div>
-                        <p className="text-lg font-bold text-green-600">{formatString(t.playerWins, { index: winner })}</p>
-                        <div className="mt-4">
-                            <p>{t.winningHand}</p>
-                            <div className="flex gap-1 flex-wrap">
-                                {winningHand?.map(t => <Tile key={t.id} tile={t} small />)}
+                    <div className="w-full flex flex-col items-center">
+                        <p className="text-xl font-bold text-green-600 mb-6">{formatString(t.playerWins, { index: winner })}</p>
+                        
+                        <div className="w-full bg-gray-50 p-2 sm:p-6 rounded-xl border shadow-inner flex flex-col items-center">
+                            <p className="text-sm text-gray-500 mb-2 self-start px-2 sm:px-4">{t.winningHand}</p>
+                            <div className="w-full flex justify-center overflow-x-auto p-2 no-scrollbar">
+                                {/* Use the Hand component to render melds + hand properly */}
+                                <Hand 
+                                    tiles={winningHand || []} 
+                                    melds={players[winner].melds} 
+                                    hidden={false}
+                                    isWinningHand={true}
+                                />
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <p>Draw!</p> // Needs key
+                    <p className="text-xl text-gray-600">Draw!</p>
                 )}
             </div>
-            <DialogFooter>
-                <Button onClick={resetGame}>{t.playAgain}</Button>
+            <DialogFooter className="sm:justify-center w-full">
+                <Button size="lg" className="w-full sm:w-auto px-8 font-bold text-lg" onClick={resetGame}>{t.playAgain}</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

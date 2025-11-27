@@ -1,24 +1,30 @@
 import { GameState, PlayerIndex, TileType } from './types';
-import { checkWin, canPong, canKong, sortHand } from './utils';
+import { checkWin } from './utils';
 
 export type AiAction = 
   | { type: 'discard'; tileId: string }
   | { type: 'win' }
-  | { type: 'pong' } // Simplified, usually needs to specify which tiles
+  | { type: 'pong' } 
+  | { type: 'gang' }
+  | { type: 'chow' }
   | { type: 'pass' };
 
 export const decideAiAction = (gameState: GameState, playerIndex: PlayerIndex): AiAction => {
     const player = gameState.players[playerIndex];
     const { hand } = player;
 
-    // 1. Check Tsumo (Self Win)
+    // 1. Check Tsumo (Self Win) - Priority: Highest
     if (checkWin(hand)) {
         return { type: 'win' };
     }
-
-    // 2. Discard Logic
-    // Simple heuristic: Discard winds/dragons first if single, then isolated numerics
     
+    // Note: AI Gang/Pong/Chow logic is usually handled during "Claim" phase (when others discard).
+    // This function `decideAiAction` is currently called during AI's *Turn* (after draw).
+    // So we only check for Tsumo, AnGang, BuGang here.
+    // For now, we simplify AI turn to just Discard or Tsumo.
+    // Implementing AI Gang during turn would require checkCanGang(hand, null, 'draw').
+    
+    // 2. Discard Logic
     const tileToDiscard = findBestDiscard(hand);
     return { type: 'discard', tileId: tileToDiscard.id };
 };
@@ -59,11 +65,5 @@ const findBestDiscard = (hand: TileType[]): TileType => {
 
     if (isolated.length > 0) return isolated[0];
 
-    // Fallback: Discard first tile (usually sorted, so worst tile)
-    // Actually, sort puts characters first. Random might be better or last.
-    // Let's discard the one with least value? No.
-    // Just discard the first one if nothing else.
     return hand[0];
 };
-
-

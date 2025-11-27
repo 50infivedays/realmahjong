@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { TileType, GameState, Player, PlayerIndex, TurnPhase, Meld } from '@/lib/mahjong/types';
+import { TileType, GameState, Player, PlayerIndex, TurnPhase, Meld, ActionOptions, GangOption, ChiOption } from '@/lib/mahjong/types';
 import { generateDeck, TILES_COUNT } from '@/lib/mahjong/constants';
-import { shuffleDeck, sortHand, sortHandAdvanced, checkWin, canPong, canKong, canChow } from '@/lib/mahjong/utils';
+import { shuffleDeck, sortHand, sortHandAdvanced, checkWin, checkCanPong, checkCanGang, checkCanChi } from '@/lib/mahjong/utils';
 import { decideAiAction } from '@/lib/mahjong/ai';
 import { getTileNameKey } from '@/lib/mahjong/helper';
 
@@ -9,7 +9,7 @@ interface GameStore extends GameState {
   initGame: () => void;
   drawTile: () => void;
   discardTile: (tileId: string) => void;
-  playerAction: (action: 'pong' | 'kong' | 'chow' | 'win' | 'pass' | 'sort', selectedTiles?: string[]) => void; 
+  playerAction: (action: 'pong' | 'kong' | 'chow' | 'win' | 'pass' | 'sort', selectedOptionIndex?: number) => void; 
   resetGame: () => void;
 }
 
@@ -20,6 +20,13 @@ const INITIAL_PLAYER_STATE: Omit<Player, 'id'> = {
   isAi: false,
   wind: 1,
   score: 1000,
+};
+
+const DEFAULT_ACTION_OPTIONS: ActionOptions = {
+    canHu: false,
+    canGang: [],
+    canPeng: false,
+    canChi: []
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -33,6 +40,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   winningHand: null,
   gamePhase: 'finished',
   message: { key: 'welcome' },
+  actionOptions: DEFAULT_ACTION_OPTIONS,
 
   initGame: () => {
     const deck = shuffleDeck(generateDeck());
@@ -67,6 +75,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       winner: null,
       winningHand: null,
       message: { key: 'gameStarted' },
+      actionOptions: DEFAULT_ACTION_OPTIONS
     });
 
     get().drawTile();
@@ -87,34 +96,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newPlayers = players.map(p => ({...p, hand: [...p.hand]}));
     newPlayers[currentPlayer].hand.push(tile);
     
-    // Do NOT auto-sort the hand here for human player
-    // We want the new tile to be separate (at the end) until they sort or discard
-    // Only sort for AI? AI sorts automatically on its turn logic usually
-    // But for display consistency, let's keep AI sorted, but HUMAN not sorted for the last tile?
-    // `drawTile` adds to end. `sortHand` sorts it.
-    
-    // Current logic:
-    // newPlayers[currentPlayer].hand.push(tile); -> Added to end.
-    // We removed `p.hand = sortHand(p.hand)` inside drawTile in previous turns?
-    // Wait, line 88: `newPlayers[currentPlayer].hand.push(tile);`
-    // It is ALREADY at the end. We just need to ensure we don't call `sortHand` on it immediately.
-    // And we don't. `initGame` calls it, but `drawTile` does NOT call `sortHand`.
-    
-    // So the new tile IS at the end. The UI needs to separate it.
-    
     set({ 
         deck, 
         players: newPlayers, 
         turnPhase: 'discard', 
-        message: { key: 'playerDrew', params: { index: currentPlayer } } 
+        message: { key: 'playerDrew', params: { index: currentPlayer } },
+        actionOptions: DEFAULT_ACTION_OPTIONS
     });
 
     const player = newPlayers[currentPlayer];
     
+    // Human Self Action Check (Tsumo, AnGang, BuGang)
     if (!player.isAi) {
-         if (checkWin(player.hand)) {
-             set({ message: { key: 'tsumoCanWin' } });
-         }
+        const canHu = checkWin(player.hand);
+        const gangOptions = checkCanGang(player.hand, null, 'draw');
+
+        if (canHu || gangOptions.length > 0) {
+            set({ 
+                message: { key: 'tsumoCanWin' },
+                actionOptions: {
+                    ...DEFAULT_ACTION_OPTIONS,
+                    canHu,
+                    canGang: gangOptions
+                }
+            });
+        }
     }
 
     if (player.isAi) {
@@ -143,9 +149,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (tileIndex === -1) return;
 
     const tile = p.hand.splice(tileIndex, 1)[0];
-    
-    // Sort hand AFTER discard to fill the gap
-    // This gives the "merge" effect
     p.hand = sortHand(p.hand);
     p.discards.push(tile);
 
@@ -160,20 +163,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
               index: currentPlayer, 
               tile: `${tile.suit} ${tile.value}` 
           } 
-      }
+      },
+      actionOptions: DEFAULT_ACTION_OPTIONS
     });
 
     const human = newPlayers[0];
     
     if (currentPlayer !== 0) {
         const canRon = checkWin([...human.hand, tile]);
-        const canP = canPong(human.hand, tile);
-        const canK = canKong(human.hand, tile);
-        const canC = (currentPlayer === 3) && canChow(human.hand, tile);
+        const canP = checkCanPong(human.hand, tile);
+        const gangOptions = checkCanGang(human.hand, tile, 'discard'); 
+        
+        const canC = (currentPlayer === 3) ? checkCanChi(human.hand, tile) : [];
 
-        if (canRon || canP || canK || canC) {
-            set({ message: { key: 'claimTile' } });
-            return;
+        if (canRon || canP || gangOptions.length > 0 || canC.length > 0) {
+            set({ 
+                message: { key: 'claimTile' },
+                actionOptions: {
+                    canHu: canRon,
+                    canPeng: canP,
+                    canGang: gangOptions,
+                    canChi: canC
+                }
+            });
+            return; 
         }
     }
 
@@ -184,8 +197,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }, 500);
   },
 
-  playerAction: (action) => {
-      const { players, lastDiscard, lastDiscardBy } = get();
+  playerAction: (action, selectedOptionIndex = 0) => {
+      const { players, lastDiscard, lastDiscardBy, actionOptions } = get();
       
       if (action === 'sort') {
         const newPlayers = players.map(p => ({...p, hand: [...p.hand]}));
@@ -193,8 +206,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({ players: newPlayers });
         return;
       }
-
-      if (!lastDiscard && action !== 'win') return; 
 
       const newPlayers = players.map(p => ({
           ...p, 
@@ -205,20 +216,80 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const human = newPlayers[0];
 
       if (action === 'pass') {
-          const nextPlayer = (lastDiscardBy! + 1) % 4;
-          set({ currentPlayer: nextPlayer as PlayerIndex, turnPhase: 'draw', message: { key: 'passed' } });
-          get().drawTile();
+          set({ actionOptions: DEFAULT_ACTION_OPTIONS, message: { key: 'passed' } });
+          if (lastDiscard) {
+              const nextPlayer = (lastDiscardBy! + 1) % 4;
+              set({ currentPlayer: nextPlayer as PlayerIndex, turnPhase: 'draw' });
+              get().drawTile();
+          }
           return;
       }
 
       if (action === 'win') {
-          if (lastDiscard) human.hand.push(lastDiscard);
+          // If win from discard (Ron), add tile to hand for display
+          if (lastDiscard) {
+              human.hand.push(lastDiscard);
+          }
+          // Sort final hand for display
+          human.hand = sortHand(human.hand);
+          
           set({ 
               gamePhase: 'finished', 
               winner: 0, 
               winningHand: human.hand,
-              message: { key: lastDiscard ? 'youWinRon' : 'youWinTsumo' }
+              message: { key: lastDiscard ? 'youWinRon' : 'youWinTsumo' },
+              actionOptions: DEFAULT_ACTION_OPTIONS
           });
+          return;
+      }
+
+      if (action === 'kong') {
+          const gangOpt = actionOptions.canGang[selectedOptionIndex]; 
+          if (!gangOpt) return;
+
+          const { tiles, type } = gangOpt;
+
+          if (type === 'MINGGANG') {
+              // MingGang (Point Gang) - Using Discard
+              if (!lastDiscard) return; // Safety check
+
+              tiles.forEach(t => {
+                  const idx = human.hand.findIndex(h => h.id === t.id);
+                  if (idx !== -1) human.hand.splice(idx, 1);
+              });
+              
+              human.melds.push({ type: 'kong', tiles: [...tiles, lastDiscard] });
+              newPlayers[lastDiscardBy!].discards.pop();
+              
+              set({ 
+                  players: newPlayers, 
+                  currentPlayer: 0, 
+                  turnPhase: 'draw', 
+                  lastDiscard: null, 
+                  message: { key: 'kongReplacement' },
+                  actionOptions: DEFAULT_ACTION_OPTIONS
+              });
+              get().drawTile();
+          } else {
+              // AnGang (Dark Gang) or BuGang (Add Gang)
+              // For AnGang, remove all 4 tiles from hand
+              tiles.forEach(t => {
+                   const idx = human.hand.findIndex(h => h.id === t.id);
+                   if (idx !== -1) human.hand.splice(idx, 1);
+              });
+
+              human.melds.push({ type: 'kong', tiles: [...tiles] });
+              
+              set({ 
+                  players: newPlayers, 
+                  currentPlayer: 0, 
+                  turnPhase: 'draw', 
+                  lastDiscard: null, 
+                  message: { key: 'kongReplacement' },
+                  actionOptions: DEFAULT_ACTION_OPTIONS
+              });
+              get().drawTile();
+          }
           return;
       }
 
@@ -236,57 +307,38 @@ export const useGameStore = create<GameStore>((set, get) => ({
         human.melds.push({ type: 'pong', tiles: [...match, lastDiscard] });
         newPlayers[lastDiscardBy!].discards.pop();
         
-        set({ players: newPlayers, currentPlayer: 0, turnPhase: 'discard', lastDiscard: null, message: { key: 'pong' } });
-      }
-
-      if (action === 'kong') {
-          const match = human.hand.filter(t => t.suit === lastDiscard.suit && t.value === lastDiscard.value).slice(0, 3);
-          if (match.length < 3) return;
-
-          match.forEach(m => {
-            const idx = human.hand.findIndex(t => t.id === m.id);
-            if (idx !== -1) human.hand.splice(idx, 1);
-          });
-
-          human.melds.push({ type: 'kong', tiles: [...match, lastDiscard] });
-          newPlayers[lastDiscardBy!].discards.pop();
-
-          set({ players: newPlayers, currentPlayer: 0, turnPhase: 'draw', lastDiscard: null, message: { key: 'kongReplacement' } });
-          get().drawTile(); 
-          return;
+        set({ 
+            players: newPlayers, 
+            currentPlayer: 0, 
+            turnPhase: 'discard', 
+            lastDiscard: null, 
+            message: { key: 'pong' },
+            actionOptions: DEFAULT_ACTION_OPTIONS
+        });
       }
 
       if (action === 'chow') {
-          const v = lastDiscard.value;
-          const s = lastDiscard.suit;
-          
-          const find = (offset: number) => human.hand.find(t => t.suit === s && t.value === v + offset);
-          
-          let tilesToEat: TileType[] | null = null;
-          
-          const m2 = find(-2);
-          const m1 = find(-1);
-          if (m2 && m1) tilesToEat = [m2, m1];
-          else {
-              const p1 = find(1);
-              if (m1 && p1) tilesToEat = [m1, p1];
-              else {
-                  const p2 = find(2);
-                  if (p1 && p2) tilesToEat = [p1, p2];
-              }
-          }
+          const chowOpt = actionOptions.canChi[selectedOptionIndex];
+          if (!chowOpt) return;
 
-          if (!tilesToEat) return;
-
-          tilesToEat.forEach(m => {
-              const idx = human.hand.findIndex(t => t.id === m.id);
+          const { tiles } = chowOpt;
+          tiles.forEach(t => {
+              if (t.id === lastDiscard.id) return; 
+              const idx = human.hand.findIndex(h => h.id === t.id);
               if (idx !== -1) human.hand.splice(idx, 1);
           });
 
-          human.melds.push({ type: 'chow', tiles: [...tilesToEat, lastDiscard].sort((a,b) => a.value - b.value) });
+          human.melds.push({ type: 'chow', tiles: [...tiles].sort((a,b) => a.value - b.value) });
           newPlayers[lastDiscardBy!].discards.pop();
 
-          set({ players: newPlayers, currentPlayer: 0, turnPhase: 'discard', lastDiscard: null, message: { key: 'chow' } });
+          set({ 
+              players: newPlayers, 
+              currentPlayer: 0, 
+              turnPhase: 'discard', 
+              lastDiscard: null, 
+              message: { key: 'chow' },
+              actionOptions: DEFAULT_ACTION_OPTIONS
+          });
       }
   }
 

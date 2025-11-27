@@ -3,9 +3,9 @@ import { GameMessage } from './helper';
 export type Suit = 'bamboo' | 'character' | 'dot' | 'wind' | 'dragon';
 
 export type TileType = {
-  id: string; // Unique identifier for React keys
+  id: string;
   suit: Suit;
-  value: number; // 1-9 for numerics, 1-4 for winds (E,S,W,N), 1-3 for dragons (Red, Green, White)
+  value: number; 
 };
 
 export type MeldType = 'chow' | 'pong' | 'kong';
@@ -15,7 +15,7 @@ export type Meld = {
   tiles: TileType[];
 };
 
-export type PlayerIndex = 0 | 1 | 2 | 3; // 0 is human, 1-3 are AI
+export type PlayerIndex = 0 | 1 | 2 | 3; 
 
 export type Player = {
   id: PlayerIndex;
@@ -23,16 +23,31 @@ export type Player = {
   discards: TileType[];
   melds: Meld[];
   isAi: boolean;
-  wind: number; // 1-4 (E, S, W, N)
+  wind: number; 
   score: number;
 };
 
 export type GamePhase = 'dealing' | 'playing' | 'finished';
 
 export type TurnPhase = 'draw' | 'discard' | 'claim'; 
-// draw: player needs to draw (or just drew and needs to discard)
-// discard: player just discarded, waiting for others to claim
-// claim: checking if anyone claims the discard
+
+export type GangType = 'ANGANG' | 'MINGGANG' | 'BUGANG';
+
+export type GangOption = {
+    type: GangType;
+    tiles: TileType[];
+};
+
+export type ChiOption = {
+    tiles: TileType[]; // The 3 tiles forming the sequence
+};
+
+export type ActionOptions = {
+    canHu: boolean;
+    canGang: GangOption[];
+    canPeng: boolean;
+    canChi: ChiOption[];
+};
 
 export type GameState = {
   deck: TileType[];
@@ -44,5 +59,8 @@ export type GameState = {
   winner: PlayerIndex | null;
   winningHand: TileType[] | null;
   gamePhase: GamePhase;
-  message: GameMessage; // Changed from string to structured object
+  message: GameMessage;
+  
+  // Current available actions for the human player
+  actionOptions: ActionOptions;
 };
