@@ -404,7 +404,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const nextPlayer = (currentPlayer + 1) % 4;
         set({ currentPlayer: nextPlayer as PlayerIndex, turnPhase: 'draw' });
         get().drawTile();
-    }, 3000);
+    }, 2000);
   },
 
   playerAction: (action, selectedOptionIndex = 0) => {
