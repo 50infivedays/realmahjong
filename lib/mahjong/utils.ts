@@ -1,4 +1,4 @@
-import { TileType, ChiOption, GangOption } from './types';
+import { TileType, ChiOption, GangOption, Meld } from './types';
 
 export const shuffleDeck = (deck: TileType[]): TileType[] => {
   const newDeck = [...deck];
@@ -218,3 +218,167 @@ export const checkCanChi = (hand: TileType[], tile: TileType): ChiOption[] => {
 export const canPong = checkCanPong;
 export const canKong = (hand: TileType[], tile: TileType) => checkCanGang(hand, tile, 'discard').length > 0;
 export const canChow = (hand: TileType[], tile: TileType) => checkCanChi(hand, tile).length > 0;
+
+// --- Shanten Calculation ---
+
+const removeItems = (arr: number[], items: number[]) => {
+    const res = [...arr];
+    for (const item of items) {
+        const idx = res.indexOf(item);
+        if (idx !== -1) res.splice(idx, 1);
+    }
+    return res;
+};
+
+const solveSuit = (tiles: number[], isHonor: boolean): {m: number, t: number} => {
+    if (tiles.length === 0) return {m: 0, t: 0};
+    
+    let best = {m: 0, t: 0};
+    const update = (m: number, t: number) => {
+        if (m * 2 + t > best.m * 2 + best.t) {
+            best = {m, t};
+        } else if (m * 2 + t === best.m * 2 + best.t && m > best.m) {
+            best = {m, t};
+        }
+    };
+
+    const first = tiles[0];
+    
+    // 1. Try Mentsu (Triplet)
+    if (tiles.filter(x => x === first).length >= 3) {
+        const rem = removeItems(tiles, [first, first, first]);
+        const res = solveSuit(rem, isHonor);
+        update(res.m + 1, res.t);
+    }
+    
+    // 2. Try Mentsu (Sequence) - only for numbers
+    if (!isHonor) {
+        if (tiles.includes(first + 1) && tiles.includes(first + 2)) {
+             const rem = removeItems(tiles, [first, first + 1, first + 2]);
+             const res = solveSuit(rem, isHonor);
+             update(res.m + 1, res.t);
+        }
+    }
+    
+    // 3. Try Taatsu (Pair)
+    if (tiles.filter(x => x === first).length >= 2) {
+        const rem = removeItems(tiles, [first, first]);
+        const res = solveSuit(rem, isHonor);
+        update(res.m, res.t + 1);
+    }
+    
+    // 4. Try Taatsu (Protosequence)
+    if (!isHonor) {
+        // Penchan/Ryanmen
+        if (tiles.includes(first + 1)) {
+            const rem = removeItems(tiles, [first, first + 1]);
+            const res = solveSuit(rem, isHonor);
+            update(res.m, res.t + 1);
+        }
+        // Kanchan
+        if (tiles.includes(first + 2)) {
+            const rem = removeItems(tiles, [first, first + 2]);
+            const res = solveSuit(rem, isHonor);
+            update(res.m, res.t + 1);
+        }
+    }
+    
+    // 5. Skip
+    {
+        const rem = tiles.slice(1);
+        const res = solveSuit(rem, isHonor);
+        update(res.m, res.t);
+    }
+    
+    return best;
+};
+
+export const calculateShanten = (hand: TileType[], melds: Meld[] = []): number => {
+  const suits = ['character', 'bamboo', 'dot'] as const;
+  const honors = ['wind', 'dragon'] as const;
+
+  // Convert to simple number arrays
+  const tilesBySuit: Record<string, number[]> = {
+    character: [], bamboo: [], dot: [], wind: [], dragon: []
+  };
+  
+  hand.forEach(t => {
+    if (tilesBySuit[t.suit]) {
+        tilesBySuit[t.suit].push(t.value);
+    }
+  });
+  Object.values(tilesBySuit).forEach(arr => arr.sort((a, b) => a - b));
+
+  let minShanten = 8; 
+  const meldCount = melds.length;
+  
+  const uniqueTiles = Array.from(new Set(hand.map(t => `${t.suit}-${t.value}`)));
+  
+  const calcWithPair = (pairKey: string | null): number => {
+     let currentSuitHands = JSON.parse(JSON.stringify(tilesBySuit)); 
+     let hasPair = false;
+     
+     if (pairKey) {
+         const [s, v] = pairKey.split('-');
+         const val = parseInt(v);
+         // Check availability
+         if (currentSuitHands[s].filter((x: number) => x === val).length >= 2) {
+             currentSuitHands[s] = removeItems(currentSuitHands[s], [val, val]);
+             hasPair = true;
+         } else {
+             return 8; 
+         }
+     }
+     
+     let totalMentsu = meldCount;
+     let totalTaatsu = 0;
+
+     for (const suit of [...suits, ...honors]) {
+         const values = currentSuitHands[suit];
+         const res = solveSuit(values, suit === 'wind' || suit === 'dragon');
+         totalMentsu += res.m;
+         totalTaatsu += res.t;
+     }
+
+     // Constraint: M + T <= 4
+     // We need to ensure that we don't count extra Taatsu that we can't convert to Mentsu
+     // Max forms = 4 (including Melds)
+     
+     if (totalMentsu + totalTaatsu > 4) {
+         totalTaatsu = 4 - totalMentsu;
+     }
+     
+     // Standard Shanten = 8 - 2M - T - J
+     return 8 - 2 * totalMentsu - totalTaatsu - (hasPair ? 1 : 0);
+  };
+
+  // 1. Try standard form (find optimal pair)
+  // Also try "no pair" (J=0), effectively searching for pair later
+  minShanten = Math.min(minShanten, calcWithPair(null));
+  
+  for (const key of uniqueTiles) {
+      minShanten = Math.min(minShanten, calcWithPair(key));
+  }
+  
+  // 2. Check for 7 Pairs (Seven Pairs) - Optional but good for AI
+  // 7 Pairs: 6 pairs + 1 pair. Shanten = 6 - pair_count + (needs 7 distinct pairs)
+  // Simplified: Shanten = 6 - pair_count + (single tiles needed)
+  // Actually standard formula: 6 - pairs. Max shanten 6.
+  // If 7 pairs: Shanten = -1 (Win).
+  if (meldCount === 0) {
+      const counts = getTileCounts(hand);
+      let pairs = 0;
+      let singles = 0;
+      Object.values(counts).forEach(c => {
+          if (c >= 2) pairs++;
+      });
+      // Seven pairs requires 7 *distinct* pairs.
+      // Our counts map handles distinct keys.
+      const sevenPairsShanten = 6 - pairs; 
+      if (sevenPairsShanten < minShanten) {
+          minShanten = sevenPairsShanten;
+      }
+  }
+  
+  return minShanten;
+};
