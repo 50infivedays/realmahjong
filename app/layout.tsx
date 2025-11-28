@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     default: 'RealMahjong - Authentic Riichi Mahjong Game',
   },
   description: "Play RealMahjong online. A pure frontend authentic Mahjong game with AI opponents. Features automatic sorting, multi-language support, and traditional gameplay.",
-  keywords: ["Mahjong", "Riichi", "Game", "Online", "Browser Game", "React", "Next.js", "RealMahjong"],
+  keywords: ["Mahjong", "Mahjong Game", "Browser Game", "麻将", "在线麻将", "free", "free mahjong"],
   authors: [{ name: "RealMahjong Team" }],
   icons: {
     icon: '/favicon.ico', // Explicitly point to favicon.ico for standard browsers
