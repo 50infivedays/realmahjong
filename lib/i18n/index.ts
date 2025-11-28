@@ -5,6 +5,10 @@ export type TranslationKey =
   | 'gameStarted'
   | 'draw'
   | 'playerDrew'
+  | 'playerPong'
+  | 'playerKong'
+  | 'playerChow'
+  | 'playerRon'
   | 'tsumoCanWin'
   | 'playerTsumo'
   | 'playerDiscarded'
@@ -52,6 +56,10 @@ export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     gameStarted: 'Game Started. East wind turn.',
     draw: 'Draw! No more tiles.',
     playerDrew: 'Player {index} drew a tile.',
+    playerPong: 'Player {index} Pong!',
+    playerKong: 'Player {index} Kong!',
+    playerChow: 'Player {index} Chow!',
+    playerRon: 'Player {index} Ron!',
     tsumoCanWin: 'Tsumo! You can Win!',
     playerTsumo: 'Player {index} Tsumo!',
     playerDiscarded: 'Player {index} discarded {tile}.',
@@ -98,6 +106,10 @@ export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     gameStarted: '游戏开始，东风局。',
     draw: '流局！没有牌了。',
     playerDrew: '玩家 {index} 摸了一张牌。',
+    playerPong: '玩家 {index} 碰！',
+    playerKong: '玩家 {index} 杠！',
+    playerChow: '玩家 {index} 吃！',
+    playerRon: '玩家 {index} 胡了！',
     tsumoCanWin: '自摸！你可以胡牌了！',
     playerTsumo: '玩家 {index} 自摸！',
     playerDiscarded: '玩家 {index} 打出了 {tile}。',
