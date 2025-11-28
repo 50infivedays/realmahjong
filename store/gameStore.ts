@@ -11,6 +11,7 @@ interface GameStore extends GameState {
   discardTile: (tileId: string) => void;
   playerAction: (action: 'pong' | 'kong' | 'chow' | 'win' | 'pass' | 'sort', selectedOptionIndex?: number) => void; 
   resetGame: () => void;
+  recentAction: { type: 'pong' | 'kong' | 'chow' | 'win'; playerIndex: number } | null;
 }
 
 const INITIAL_PLAYER_STATE: Omit<Player, 'id'> = {
@@ -36,6 +37,14 @@ const processAiClaims = (get: () => GameStore, set: any): boolean => {
     
     const tile = lastDiscard;
 
+    // Helper to trigger visual effect
+    const triggerActionEffect = (type: 'pong' | 'kong' | 'chow' | 'win', playerIndex: number) => {
+        set({ recentAction: { type, playerIndex } });
+        setTimeout(() => {
+            set({ recentAction: null });
+        }, 2000); // Effect duration
+    };
+
     // 1. Check RON (Win) - Priority over all
     for (let i = 1; i < 4; i++) {
         if (i === lastDiscardBy) continue; 
@@ -53,6 +62,7 @@ const processAiClaims = (get: () => GameStore, set: any): boolean => {
                 message: { key: 'playerRon', params: { index: i } },
                 actionOptions: DEFAULT_ACTION_OPTIONS
             });
+            triggerActionEffect('win', i);
             return true;
         }
     }
@@ -105,6 +115,8 @@ const processAiClaims = (get: () => GameStore, set: any): boolean => {
                  actionOptions: DEFAULT_ACTION_OPTIONS
              });
              
+             triggerActionEffect(action.type === 'pong' ? 'pong' : 'kong', idx);
+
              // Trigger AI discard logic after claim (delayed)
              setTimeout(() => {
                  get().drawTile(); // Using drawTile to trigger AI logic? No, drawTile draws a card. 
@@ -188,6 +200,8 @@ const processAiClaims = (get: () => GameStore, set: any): boolean => {
                  message: { key: 'playerChow', params: { index: nextIdx } },
                  actionOptions: DEFAULT_ACTION_OPTIONS
              });
+
+             triggerActionEffect('chow', nextIdx);
              
              setTimeout(() => {
                  const aiAction = decideAiAction(get(), nextIdx as PlayerIndex);
@@ -214,6 +228,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   gamePhase: 'finished',
   message: { key: 'welcome' },
   actionOptions: DEFAULT_ACTION_OPTIONS,
+  recentAction: null,
 
   initGame: () => {
     const deck = shuffleDeck(generateDeck());
@@ -248,7 +263,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       winner: null,
       winningHand: null,
       message: { key: 'gameStarted' },
-      actionOptions: DEFAULT_ACTION_OPTIONS
+      actionOptions: DEFAULT_ACTION_OPTIONS,
+      recentAction: null
     });
 
     get().drawTile();
@@ -388,7 +404,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const nextPlayer = (currentPlayer + 1) % 4;
         set({ currentPlayer: nextPlayer as PlayerIndex, turnPhase: 'draw' });
         get().drawTile();
-    }, 500);
+    }, 3000);
   },
 
   playerAction: (action, selectedOptionIndex = 0) => {

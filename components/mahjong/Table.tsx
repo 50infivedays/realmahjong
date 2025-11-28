@@ -31,7 +31,8 @@ export const MahjongTable = () => {
       winner,
       winningHand,
       deck,
-      actionOptions
+      actionOptions,
+      recentAction
   } = useGameStore();
 
   const { language } = useLanguageStore();
@@ -39,6 +40,28 @@ export const MahjongTable = () => {
 
   const [showChiSelection, setShowChiSelection] = useState(false);
   const [showGangSelection, setShowGangSelection] = useState(false);
+
+  // Helpers for visual effects
+  const getActionPosition = (index: number) => {
+      // 0 is bottom (Human), 1 Right, 2 Top, 3 Left
+      switch(index) {
+          case 0: return "bottom-[30%] left-1/2 -translate-x-1/2";
+          case 1: return "right-[20%] top-1/2 -translate-y-1/2";
+          case 2: return "top-[20%] left-1/2 -translate-x-1/2";
+          case 3: return "left-[20%] top-1/2 -translate-y-1/2";
+          default: return "hidden";
+      }
+  };
+
+  const getActionText = (type: string) => {
+      switch(type) {
+          case 'pong': return "PON";
+          case 'kong': return "KAN";
+          case 'chow': return "CHI";
+          case 'win': return "RON";
+          default: return "";
+      }
+  };
 
   useEffect(() => {
     initGame();
@@ -314,6 +337,15 @@ export const MahjongTable = () => {
             </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Action Effect Overlay */}
+      {recentAction && (
+          <div className={`absolute ${getActionPosition(recentAction.playerIndex)} z-50 pointer-events-none animate-in zoom-in-50 duration-300`}>
+              <div className="text-6xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] border-4 border-yellow-600 px-8 py-4 rounded-xl bg-black/70 backdrop-blur-sm transform scale-110 shadow-[0_0_30px_rgba(255,215,0,0.5)]">
+                  {getActionText(recentAction.type)}
+              </div>
+          </div>
+      )}
 
     </div>
   );
