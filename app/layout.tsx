@@ -13,22 +13,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://realmahjong.vercel.app';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     template: '%s | RealMahjong',
-    default: 'RealMahjong - Authentic Riichi Mahjong Game',
+    default: 'RealMahjong - Authentic Mahjong Game',
   },
   description: "Play RealMahjong online. A pure frontend authentic Mahjong game with AI opponents. Features automatic sorting, multi-language support, and traditional gameplay.",
-  keywords: ["Mahjong", "Mahjong Game", "Browser Game", "麻将", "在线麻将", "free", "free mahjong", "free mahjong games", "real mahjong"],
+  keywords: ["Mahjong", "Game", "Online", "Browser Game", "React", "Next.js", "RealMahjong"],
   authors: [{ name: "RealMahjong Team" }],
   icons: {
-    icon: '/favicon.ico', // Explicitly point to favicon.ico for standard browsers
+    icon: '/favicon.ico',
     apple: '/apple-icon.png',
+  },
+  alternates: {
+    canonical: '/',
   },
   openGraph: {
     title: 'RealMahjong',
-    description: 'Play authentic Riichi Mahjong online against AI.',
-    url: 'https://realmahjong.vercel.app', // Placeholder URL or user's actual if known, better to omit or put likely one
+    description: 'Play authentic Mahjong online against AI.',
+    url: '/',
     siteName: 'RealMahjong',
     locale: 'en_US',
     type: 'website',
@@ -36,7 +42,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'RealMahjong',
-    description: 'Authentic Riichi Mahjong Game',
+    description: 'Authentic Mahjong Game',
   },
 };
 
