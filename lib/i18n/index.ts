@@ -133,11 +133,11 @@ export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     dragonWhite: '白',
     navHome: '首页',
     navGame: '游戏',
-    homeTitle: '真实麻将',
+    homeTitle: '正宗麻将',
     homeSubtitle: '纯粹的麻将体验',
     homeDescription: '在线体验传统麻将，与智能AI对手一决高下。无需下载，点击即玩，尽享策略与技巧的乐趣。',
     homeStartBtn: '开始游戏',
-    footerCopyright: '真实麻将. 保留所有权利.',
+    footerCopyright: '正宗麻将. 保留所有权利.',
   }
 };
 
