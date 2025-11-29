@@ -4,6 +4,7 @@ import { generateDeck, TILES_COUNT } from '@/lib/mahjong/constants';
 import { shuffleDeck, sortHand, sortHandAdvanced, checkWin, checkCanPong, checkCanGang, checkCanChi } from '@/lib/mahjong/utils';
 import { decideAiAction, decideAiClaim } from '@/lib/mahjong/ai';
 import { getTileNameKey } from '@/lib/mahjong/helper';
+import { event } from '@/lib/gtag';
 
 interface GameStore extends GameState {
     initGame: () => void;
@@ -267,6 +268,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
             recentAction: null
         });
 
+        event({ action: 'game_start', category: 'Game', label: 'New Game Started' });
+
         get().drawTile();
     },
 
@@ -427,6 +430,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
         if (action === 'pass') {
             set({ actionOptions: DEFAULT_ACTION_OPTIONS, message: { key: 'passed' } });
+            event({ action: 'player_action', category: 'Game', label: 'Pass' });
 
             // Human passed. Check if AI wants it.
             setTimeout(() => {
@@ -453,6 +457,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 winningHand: human.hand,
                 message: { key: lastDiscard ? 'youWinRon' : 'youWinTsumo' },
                 actionOptions: DEFAULT_ACTION_OPTIONS
+            });
+
+            event({
+                action: 'game_win',
+                category: 'Game',
+                label: lastDiscard ? 'Human Win Ron' : 'Human Win Tsumo',
+                value: human.score
             });
             return;
         }
@@ -482,6 +493,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
                     message: { key: 'kongReplacement' },
                     actionOptions: DEFAULT_ACTION_OPTIONS
                 });
+                event({ action: 'player_action', category: 'Game', label: 'Kong' });
                 get().drawTile();
             } else {
                 tiles.forEach(t => {
@@ -499,6 +511,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
                     message: { key: 'kongReplacement' },
                     actionOptions: DEFAULT_ACTION_OPTIONS
                 });
+                event({ action: 'player_action', category: 'Game', label: 'Kong' });
                 get().drawTile();
             }
             return;
@@ -526,6 +539,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 message: { key: 'pong' },
                 actionOptions: DEFAULT_ACTION_OPTIONS
             });
+            event({ action: 'player_action', category: 'Game', label: 'Pong' });
         }
 
         if (action === 'chow') {
@@ -550,6 +564,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 message: { key: 'chow' },
                 actionOptions: DEFAULT_ACTION_OPTIONS
             });
+            event({ action: 'player_action', category: 'Game', label: 'Chow' });
         }
     }
 
