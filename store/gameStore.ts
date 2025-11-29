@@ -120,16 +120,9 @@ const processAiClaims = (get: () => GameStore, set: any): boolean => {
 
             // Trigger AI discard logic after claim (delayed)
             setTimeout(() => {
-                get().drawTile(); // Using drawTile to trigger AI logic? No, drawTile draws a card. 
-                // AI claiming means they skip draw and go straight to discard.
-                // But `drawTile` function handles AI logic `decideAiAction`.
-                // We need to trigger `decideAiAction` without drawing.
-                // Or we can split logic. 
-                // Current `drawTile` does: `newPlayers[currentPlayer].hand.push(tile)` then `decideAiAction`.
-
-                // We should probably just call `decideAiAction` directly or create a `aiTurn` helper.
-                // For now, let's simulate it by calling a simplified AI action handler or modifying drawTile.
-                // Ideally: `aiTurn(get, set, idx)`.
+                // Note: After claim, it is this AI's turn to DISCARD, not DRAW.
+                // drawTile() handles "Draw then Action".
+                // Here we need "Action (Discard) only".
 
                 const aiAction = decideAiAction(get(), idx as PlayerIndex);
                 if (aiAction.type === 'discard' && aiAction.tileId) {
@@ -143,18 +136,7 @@ const processAiClaims = (get: () => GameStore, set: any): boolean => {
 
             // If Kong, we actually need to draw a replacement tile first!
             if (action.type === 'gang') {
-                // Draw replacement
-                // ... Too complex to patch perfectly here without refactoring `drawTile`.
-                // Let's assume AI just discards for Pong/Chow.
-                // For Kong, it's tricky. 
-                // Let's simplify: AI only Pongs/Chows for now, or if Kong, we handle replacement.
-                // If Kong, we should call `drawTile`? 
-                // If we call `drawTile`, it draws a normal tile.
-                // We need `drawReplacementTile`.
-                // Given constraints, let's assume standard drawTile works for replacement if we force it.
-                if (action.type === 'gang') {
-                    get().drawTile(); // Draw replacement
-                }
+                get().drawTile(); // Draw replacement
             }
 
             return true;
