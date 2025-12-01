@@ -332,7 +332,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     },
 
     discardTile: (tileId: string) => {
-        const { players, currentPlayer } = get();
+        const { players, currentPlayer, turnPhase } = get();
+        if (turnPhase !== 'discard') return;
+
         const newPlayers = players.map(p => ({ ...p, hand: [...p.hand], discards: [...p.discards] }));
         const p = newPlayers[currentPlayer];
 

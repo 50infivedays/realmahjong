@@ -334,38 +334,56 @@ export const MahjongTable = () => {
 
                 {/* Action Buttons */}
                 {(actionOptions.canHu || actionOptions.canGang.length > 0 || actionOptions.canPeng || actionOptions.canChi.length > 0) && (
-                    <div className="flex gap-2 bg-black/60 p-2 rounded-lg backdrop-blur-sm animate-in slide-in-from-bottom-5">
+                    <div className="flex gap-3 bg-black/70 p-3 rounded-xl backdrop-blur-md animate-in slide-in-from-bottom-10 shadow-2xl border border-white/10">
                         
                         {/* HU Button */}
                         {actionOptions.canHu && (
-                            <Button variant="destructive" size="sm" onClick={() => playerAction('win')}>
-                                {lastDiscard ? t.btnRon : t.btnTsumo}
+                            <Button 
+                                className="bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 text-white border-b-4 border-red-900 active:border-b-0 active:translate-y-1 font-black text-lg h-14 w-14 rounded-full shadow-lg transition-all"
+                                onClick={() => playerAction('win')}
+                            >
+                                {lastDiscard ? (t.btnRon || "RON") : (t.btnTsumo || "TSUMO")}
                             </Button>
                         )}
 
                         {/* GANG Button */}
                         {actionOptions.canGang.length > 0 && (
-                            <Button variant="secondary" size="sm" onClick={handleGangClick}>
-                                {t.btnKong}
+                            <Button 
+                                className="bg-gradient-to-b from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 text-yellow-950 border-b-4 border-yellow-800 active:border-b-0 active:translate-y-1 font-black text-lg h-14 w-14 rounded-full shadow-lg transition-all"
+                                onClick={handleGangClick}
+                            >
+                                {t.btnKong || "KAN"}
                             </Button>
                         )}
 
                         {/* PENG Button */}
                         {actionOptions.canPeng && (
-                            <Button variant="secondary" size="sm" onClick={() => playerAction('pong')}>
-                                {t.btnPong}
+                            <Button 
+                                className="bg-gradient-to-b from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 text-yellow-950 border-b-4 border-yellow-800 active:border-b-0 active:translate-y-1 font-black text-lg h-14 w-14 rounded-full shadow-lg transition-all"
+                                onClick={() => playerAction('pong')}
+                            >
+                                {t.btnPong || "PON"}
                             </Button>
                         )}
 
                         {/* CHI Button */}
                         {actionOptions.canChi.length > 0 && (
-                            <Button variant="secondary" size="sm" onClick={handleChiClick}>
-                                {t.btnChow}
+                            <Button 
+                                className="bg-gradient-to-b from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 text-yellow-950 border-b-4 border-yellow-800 active:border-b-0 active:translate-y-1 font-black text-lg h-14 w-14 rounded-full shadow-lg transition-all"
+                                onClick={handleChiClick}
+                            >
+                                {t.btnChow || "CHI"}
                             </Button>
                         )}
 
                         {/* PASS Button - Always show if actions available */}
-                        <Button variant="outline" size="sm" onClick={() => playerAction('pass')}>{t.btnPass}</Button>
+                        <Button 
+                            variant="outline" 
+                            className="h-14 w-14 rounded-full border-2 border-gray-400 bg-gray-100/80 text-gray-600 hover:bg-white hover:text-gray-900 font-bold"
+                            onClick={() => playerAction('pass')}
+                        >
+                            {t.btnPass || "Pass"}
+                        </Button>
                     </div>
                 )}
             </div>
