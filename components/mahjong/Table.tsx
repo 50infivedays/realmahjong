@@ -86,10 +86,10 @@ export const MahjongTable = () => {
 
   const getActionText = (type: string) => {
       switch(type) {
-          case 'pong': return "PON";
-          case 'kong': return "KAN";
-          case 'chow': return "CHI";
-          case 'win': return "RON";
+          case 'pong': return t.btnPong || "PON";
+          case 'kong': return t.btnKong || "KAN";
+          case 'chow': return t.btnChow || "CHI";
+          case 'win': return t.btnRon || "RON";
           default: return "";
       }
   };
