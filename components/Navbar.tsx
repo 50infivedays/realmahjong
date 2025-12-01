@@ -10,7 +10,10 @@ import { useLanguageStore } from '@/store/languageStore';
 import { dictionaries } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
+
 export const Navbar = () => {
+    const isMobile = useIsMobile();
     const { language, setLanguage } = useLanguageStore();
     const pathname = usePathname();
 
@@ -30,11 +33,13 @@ export const Navbar = () => {
     const t = dictionaries[language];
     const isGamePage = pathname === '/game';
 
+    // Don't show navbar on mobile when in game page
+    const shouldHideNavbar = isGamePage && isMobile;
+
+    if (shouldHideNavbar) return null;
+
     return (
-        <nav className={cn(
-            "fixed top-0 left-0 right-0 z-50 h-16 bg-green-900/95 backdrop-blur-sm border-b border-green-800 shadow-lg items-center justify-between px-4 sm:px-8 text-white",
-            isGamePage ? "hidden md:flex" : "flex"
-        )}>
+        <nav className="fixed top-0 left-0 right-0 z-50 h-16 bg-green-900/95 backdrop-blur-sm border-b border-green-800 shadow-lg flex items-center justify-between px-4 sm:px-8 text-white">
             {/* Left: Logo and Title */}
             <Link
                 href="/"

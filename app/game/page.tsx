@@ -1,10 +1,17 @@
+"use client";
+
 import { MahjongTable } from "@/components/mahjong/Table";
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import { cn } from "@/lib/utils";
 
 export default function GamePage() {
+  const isMobile = useIsMobile();
+
   return (
-    // Use md:pt-16 for desktop to account for navbar
-    // Use fixed inset-0 z-50 on mobile to cover everything (fullscreen)
-    <main className="fixed inset-0 z-50 md:static md:z-auto w-full h-full md:h-screen md:pt-16 overflow-hidden bg-green-800"> 
+    <main className={cn(
+      "w-full h-full overflow-hidden bg-green-800",
+      isMobile ? "fixed inset-0 z-50" : "pt-16 h-screen"
+    )}> 
       <MahjongTable />
     </main>
   );

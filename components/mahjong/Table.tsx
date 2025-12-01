@@ -18,7 +18,10 @@ import { useLanguageStore } from '@/store/languageStore';
 import Link from 'next/link';
 
 
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
+
 export const MahjongTable = () => {
+  const isMobile = useIsMobile();
   const { 
       players, 
       currentPlayer, 
@@ -144,20 +147,24 @@ export const MahjongTable = () => {
     <div className="flex items-center justify-center h-full w-full bg-green-800 overflow-hidden relative select-none">
       
       {/* Back to Home Button - Visible only on mobile */}
-      <Link href="/" className="absolute top-4 left-4 z-[60] rounded-full hover:opacity-80 transition-opacity shadow-lg md:hidden">
-          <img src="/icon.png" alt="Home" className="w-10 h-10 rounded-full border-2 border-white/20" />
-      </Link>
+      {isMobile && (
+        <Link href="/" className="absolute top-4 left-4 z-[60] rounded-full hover:opacity-80 transition-opacity shadow-lg">
+            <img src="/icon.png" alt="Home" className="w-10 h-10 rounded-full border-2 border-white/20" />
+        </Link>
+      )}
 
       {/* Restart Game Button - Visible only on mobile */}
-      <Button 
-          variant="secondary" 
-          size="icon" 
-          className="absolute top-4 right-4 z-[60] h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 text-white border-none shadow-lg md:hidden"
-          onClick={resetGame}
-          title="Restart Game"
-      >
-          <RotateCcw size={20} />
-      </Button>
+      {isMobile && (
+        <Button 
+            variant="secondary" 
+            size="icon" 
+            className="absolute top-4 right-4 z-[60] h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 text-white border-none shadow-lg"
+            onClick={resetGame}
+            title="Restart Game"
+        >
+            <RotateCcw size={20} />
+        </Button>
+      )}
 
       {/* Logical Game Container */}
       <div 
