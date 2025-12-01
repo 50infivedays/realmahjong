@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { ArrowLeftRight, ArrowLeft, RotateCcw } from 'lucide-react';
+import { ArrowLeftRight, ArrowLeft, RotateCcw, Maximize2 } from 'lucide-react';
 import { dictionaries, formatString } from '@/lib/i18n';
 import { useLanguageStore } from '@/store/languageStore';
 import Link from 'next/link';
@@ -45,6 +45,7 @@ export const MahjongTable = () => {
   const [showChiSelection, setShowChiSelection] = useState(false);
   const [showGangSelection, setShowGangSelection] = useState(false);
   const [isGameOverDialogOpen, setIsGameOverDialogOpen] = useState(false);
+  const [showLandscapeHint, setShowLandscapeHint] = useState(false);
 
   // Sync game phase with dialog visibility
   useEffect(() => {
@@ -74,6 +75,32 @@ export const MahjongTable = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+
+  useEffect(() => {
+    const checkOrientation = () => {
+        if (isMobile && window.innerHeight > window.innerWidth) {
+            setShowLandscapeHint(true);
+        } else {
+            setShowLandscapeHint(false);
+        }
+    };
+
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    return () => window.removeEventListener('resize', checkOrientation);
+  }, [isMobile]);
+
+  const handleFullScreen = () => {
+      if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(e => {
+              console.log(`Error attempting to enable full-screen mode: ${e.message} (${e.name})`);
+          });
+      } else {
+          if (document.exitFullscreen) {
+              document.exitFullscreen();
+          }
+      }
+  };
 
   // Helpers for visual effects
   const getActionPosition = (index: number) => {
@@ -155,15 +182,42 @@ export const MahjongTable = () => {
 
       {/* Restart Game Button - Visible only on mobile */}
       {isMobile && (
-        <Button 
-            variant="secondary" 
-            size="icon" 
-            className="absolute top-4 right-4 z-[60] h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 text-white border-none shadow-lg"
-            onClick={resetGame}
-            title="Restart Game"
-        >
-            <RotateCcw size={20} />
-        </Button>
+        <>
+            <Button 
+                variant="secondary" 
+                size="icon" 
+                className="absolute top-4 right-4 z-[60] h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 text-white border-none shadow-lg"
+                onClick={resetGame}
+                title="Restart Game"
+            >
+                <RotateCcw size={20} />
+            </Button>
+
+            <Button 
+                variant="secondary" 
+                size="icon" 
+                className="absolute top-16 right-4 z-[60] h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 text-white border-none shadow-lg mt-2"
+                onClick={handleFullScreen}
+                title="Toggle Full Screen"
+            >
+                <Maximize2 size={20} />
+            </Button>
+        </>
+      )}
+
+      {/* Landscape Hint Overlay */}
+      {showLandscapeHint && (
+          <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center text-white p-8 text-center animate-in fade-in duration-300">
+              <div className="w-20 h-20 mb-6 animate-bounce">
+                  <RotateCcw size={80} className="text-yellow-400 rotate-90" />
+              </div>
+              <h2 className="text-2xl font-bold mb-4 text-yellow-300">Please Rotate Your Device</h2>
+              <p className="text-lg text-gray-300 mb-8">For the best experience, please switch to landscape mode and use full screen.</p>
+              <Button size="lg" onClick={handleFullScreen} className="bg-green-600 hover:bg-green-700 text-white border-none">
+                  <Maximize2 className="mr-2" size={20} />
+                  Enter Full Screen
+              </Button>
+          </div>
       )}
 
       {/* Logical Game Container */}
