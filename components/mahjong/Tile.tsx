@@ -52,11 +52,13 @@ export const Tile: React.FC<TileProps> = ({ tile, onClick, selected, hidden, sma
           small ? "w-8 h-11" : "w-10 h-14",
         )}
       >
-        <img 
-          src={BACK_IMAGE_URL} 
-          alt="Tile Back" 
-          className="w-full h-full object-cover"
-        />
+      <img 
+        src={BACK_IMAGE_URL} 
+        alt="Tile Back" 
+        decoding="async"
+        loading="lazy"
+        className="w-full h-full object-cover"
+      />
       </div>
     );
   }
@@ -69,13 +71,14 @@ export const Tile: React.FC<TileProps> = ({ tile, onClick, selected, hidden, sma
       className={cn(
         "relative flex flex-col items-center justify-center bg-white rounded shadow-md select-none cursor-pointer transition-transform overflow-hidden",
         small ? "w-8 h-11" : "w-10 h-14",
-        selected ? "-translate-y-2 ring-2 ring-blue-500" : "hover:-translate-y-1",
+        selected ? "-translate-y-2 ring-2 ring-blue-500" : "md:hover:-translate-y-1",
         "active:translate-y-0 active:shadow-none"
       )}
     >
       <img 
         src={imgSrc} 
         alt={`${tile.suit}-${tile.value}`} 
+        decoding="async"
         className="w-full h-full object-contain p-[2px]" // Add padding to simulate border/margin inside tile
       />
       {/* Overlay for selection/hover effect if needed */}

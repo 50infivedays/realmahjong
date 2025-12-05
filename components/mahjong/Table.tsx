@@ -227,7 +227,7 @@ export const MahjongTable = () => {
             height: GAME_HEIGHT, 
             transform: `scale(${scale})`,
         }}
-        className="relative bg-green-800 shrink-0 shadow-2xl"
+        className="relative bg-green-800 shrink-0 shadow-2xl will-change-transform"
       >
 
         {/* --- Central Table Area (Discards & Info) --- */}
@@ -253,7 +253,7 @@ export const MahjongTable = () => {
                     {/* Last Discard Display - Central Focus */}
                     <div className="relative flex flex-col items-center justify-center min-h-[80px]">
                         {lastDiscard ? (
-                            <div className="animate-in fade-in zoom-in duration-200 drop-shadow-[0_0_15px_rgba(255,255,0,0.3)] scale-150">
+                            <div className="animate-in fade-in zoom-in duration-200 shadow-[0_0_15px_rgba(255,255,0,0.3)] scale-150">
                                 <Tile tile={lastDiscard} />
                             </div>
                         ) : (
