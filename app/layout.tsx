@@ -30,10 +30,6 @@ export const metadata: Metadata = {
   description: "Play RealMahjong online. A pure frontend authentic Mahjong game with AI opponents. Features automatic sorting, multi-language support, and traditional gameplay.",
   keywords: ["Mahjong", "Mahjong Game", "Browser Game", "麻将", "在线麻将", "free", "free mahjong", "free mahjong games", "real mahjong"],
   authors: [{ name: "RealMahjong Team" }],
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-icon.png",
-  },
   alternates: {
     canonical: "/",
   },

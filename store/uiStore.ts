@@ -10,3 +10,4 @@ export const useUiStore = create<UiState>((set) => ({
   setGameFullscreen: (isFull) => set({ isGameFullscreen: isFull }),
 }));
 
+
