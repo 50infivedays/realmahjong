@@ -40,8 +40,15 @@ export default function Home() {
 
       </div>
       
-      <footer className="py-6 text-center text-green-600/60 text-sm">
-        © {new Date().getFullYear()} {t.footerCopyright}
+      <footer className="py-8 text-center text-green-600/60 text-sm flex flex-col gap-4">
+        <div className="flex justify-center gap-6">
+          <Link href="/about" className="hover:text-green-400 transition-colors">{t.navAbout}</Link>
+          <Link href="/contact" className="hover:text-green-400 transition-colors">{t.navContact}</Link>
+          <Link href="/privacy" className="hover:text-green-400 transition-colors">{t.navPrivacy}</Link>
+        </div>
+        <div>
+          © {new Date().getFullYear()} {t.footerCopyright}
+        </div>
       </footer>
     </main>
   );

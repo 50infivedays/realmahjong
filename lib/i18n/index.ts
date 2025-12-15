@@ -48,7 +48,16 @@ export type TranslationKey =
   | 'homeSubtitle'
   | 'homeDescription'
   | 'homeStartBtn'
-  | 'footerCopyright';
+  | 'footerCopyright'
+  | 'navAbout'
+  | 'navContact'
+  | 'navPrivacy'
+  | 'aboutTitle'
+  | 'aboutContent'
+  | 'contactTitle'
+  | 'contactContent'
+  | 'privacyTitle'
+  | 'privacyContent';
 
 export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
   en: {
@@ -100,6 +109,15 @@ export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     homeDescription: 'Play traditional Mahjong online against intelligent AI opponents. No download required, just pure strategy and skill.',
     homeStartBtn: 'Start Game',
     footerCopyright: 'RealMahjong. All rights reserved.',
+    navAbout: 'About',
+    navContact: 'Contact',
+    navPrivacy: 'Privacy',
+    aboutTitle: 'About RealMahjong',
+    aboutContent: 'RealMahjong is a free online Mahjong game dedicated to providing an authentic and smooth gaming experience. Play against advanced AI opponents anytime, anywhere, with no downloads required.',
+    contactTitle: 'Contact Us',
+    contactContent: 'We value your feedback! If you have any questions, bug reports, or suggestions, please reach out to us at:',
+    privacyTitle: 'Privacy Policy',
+    privacyContent: 'RealMahjong respects your privacy. We do not collect any personal information. All game data is processed locally on your device or temporarily for game logic purposes only. We use Google Analytics to understand website traffic, but no personally identifiable information is stored.',
   },
   zh: {
     welcome: '欢迎来到麻将游戏！',
@@ -150,6 +168,15 @@ export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     homeDescription: '在线体验传统麻将，与智能AI对手一决高下。无需下载，点击即玩，尽享策略与技巧的乐趣。',
     homeStartBtn: '开始游戏',
     footerCopyright: '正宗麻将. 保留所有权利.',
+    navAbout: '关于',
+    navContact: '联系',
+    navPrivacy: '隐私',
+    aboutTitle: '关于正宗麻将',
+    aboutContent: '正宗麻将是一款免费的在线麻将游戏，致力于提供原汁原味且流畅的游戏体验。无需下载，随时随地与智能AI对手切磋牌技。',
+    contactTitle: '联系我们',
+    contactContent: '我们重视您的反馈！如果您有任何问题、错误报告或建议，请通过以下方式联系我们：',
+    privacyTitle: '隐私政策',
+    privacyContent: '正宗麻将尊重您的隐私。我们不会收集任何个人信息。所有游戏数据仅在您的设备上本地处理，或仅用于游戏逻辑的临时处理。我们使用 Google Analytics 来了解网站流量，但不会存储任何个人身份信息。',
   }
 };
 
