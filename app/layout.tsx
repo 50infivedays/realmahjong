@@ -25,10 +25,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     template: "%s | RealMahjong",
-    default: "RealMahjong - Authentic Mahjong Game",
+    default: "RealMahjong - Free Online Mahjong Game",
   },
-  description: "Play RealMahjong online. A pure frontend authentic Mahjong game with AI opponents. Features automatic sorting, multi-language support, and traditional gameplay.",
-  keywords: ["Mahjong", "Mahjong Game", "Browser Game", "麻将", "在线麻将", "free", "free mahjong", "free mahjong games", "real mahjong"],
+  description: "Play RealMahjong online free. A pure frontend authentic Mahjong game with AI opponents. Features automatic sorting, multi-language support, and traditional gameplay.",
+  keywords: ["Mahjong", "Mahjong Game", "free mahjong", "Browser Game", "麻将", "在线麻将", "free", "free mahjong games", "real mahjong"],
   authors: [{ name: "RealMahjong Team" }],
   alternates: {
     canonical: "/",
