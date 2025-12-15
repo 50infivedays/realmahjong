@@ -2,6 +2,9 @@
 
 import { useLanguageStore } from '@/store/languageStore';
 import { dictionaries } from '@/lib/i18n';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Home } from 'lucide-react';
 
 export default function PrivacyPage() {
   const { language } = useLanguageStore();
@@ -15,6 +18,18 @@ export default function PrivacyPage() {
           <p className="text-lg text-gray-200 leading-relaxed whitespace-pre-wrap">
             {t.privacyContent}
           </p>
+        </div>
+
+        <div className="mt-12 flex justify-center">
+          <Link href="/">
+            <Button 
+              size="lg" 
+              className="gap-2 bg-yellow-500 hover:bg-yellow-400 text-green-950 font-bold px-8 py-6 text-lg rounded-full shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(234,179,8,0.5)]"
+            >
+              <Home size={22} />
+              {t.navHome}
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
