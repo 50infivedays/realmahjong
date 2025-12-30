@@ -59,7 +59,7 @@ const processAiClaims = (get: () => GameStore, set: any): boolean => {
                 players: newPlayers,
                 gamePhase: 'finished',
                 winner: i as PlayerIndex,
-                winningHand: p.hand,
+                winningHand: [...p.hand],  // Create a snapshot copy
                 message: { key: 'playerRon', params: { index: i } },
                 actionOptions: DEFAULT_ACTION_OPTIONS
             });
@@ -306,7 +306,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
                     set({
                         gamePhase: 'finished',
                         winner: currentPlayer,
-                        winningHand: player.hand,
+                        winningHand: [...player.hand],  // Create a snapshot copy
                         message: { key: 'playerTsumo', params: { index: currentPlayer } }
                     });
                 } else if (action.type === 'gang') {
@@ -432,13 +432,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
         if (action === 'win') {
             if (lastDiscard) {
                 human.hand.push(lastDiscard);
+                // Remove from discarder's discards if Ron
+                if (lastDiscardBy !== null) {
+                    newPlayers[lastDiscardBy].discards.pop();
+                }
             }
             human.hand = sortHand(human.hand);
 
             set({
+                players: newPlayers,  // Update players to store
                 gamePhase: 'finished',
                 winner: 0,
-                winningHand: human.hand,
+                winningHand: [...human.hand],  // Create a snapshot copy
                 message: { key: lastDiscard ? 'youWinRon' : 'youWinTsumo' },
                 actionOptions: DEFAULT_ACTION_OPTIONS
             });
