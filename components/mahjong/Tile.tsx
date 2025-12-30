@@ -52,13 +52,13 @@ export const Tile: React.FC<TileProps> = ({ tile, onClick, selected, hidden, sma
           small ? "w-8 h-11" : "w-10 h-14",
         )}
       >
-      <img 
-        src={BACK_IMAGE_URL} 
-        alt="Tile Back" 
+        <img 
+          src={BACK_IMAGE_URL} 
+          alt="Tile Back" 
         decoding="async"
         loading="lazy"
-        className="w-full h-full object-cover"
-      />
+          className="w-full h-full object-cover"
+        />
       </div>
     );
   }

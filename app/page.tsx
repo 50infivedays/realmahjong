@@ -47,7 +47,7 @@ export default function Home() {
           <Link href="/privacy" className="hover:text-green-400 transition-colors">{t.navPrivacy}</Link>
         </div>
         <div>
-          © {new Date().getFullYear()} {t.footerCopyright}
+        © {new Date().getFullYear()} {t.footerCopyright}
         </div>
       </footer>
     </main>
