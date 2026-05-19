@@ -30,12 +30,14 @@ const getTileImageSrc = (tile: TileType) => {
 
   if (tile.suit === "wind") {
     const winds = ["Ton", "Nan", "Shaa", "Pei"];
-    return `${baseUrl}/${winds[tile.value - 1]}.svg`;
+    const name = winds[tile.value - 1];
+    return name ? `${baseUrl}/${name}.svg` : `${baseUrl}/Blank.svg`;
   }
 
   if (tile.suit === "dragon") {
     const dragons = ["Chun", "Hatsu", "Haku"];
-    return `${baseUrl}/${dragons[tile.value - 1]}.svg`;
+    const name = dragons[tile.value - 1];
+    return name ? `${baseUrl}/${name}.svg` : `${baseUrl}/Blank.svg`;
   }
 
   return "";

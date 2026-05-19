@@ -90,25 +90,71 @@ export const getTileCounts = (tiles: TileType[]) => {
   return counts;
 };
 
-export const checkWin = (tiles: TileType[]): boolean => {
-  if (tiles.length === 0) return true;
-  if (tiles.length === 2) {
-    return tiles[0].suit === tiles[1].suit && tiles[0].value === tiles[1].value;
-  }
+const canFormExactlyNSets = (tiles: TileType[], setsNeeded: number): boolean => {
+  if (setsNeeded === 0) return tiles.length === 0;
+  if (tiles.length < 3) return false;
+
   const sorted = sortHand(tiles);
-  const uniqueTiles = Array.from(new Set(sorted.map(t => `${t.suit}-${t.value}`)));
+  const first = sorted[0];
+
+  const triplet = sorted.filter((t) => t.suit === first.suit && t.value === first.value);
+  if (triplet.length >= 3) {
+    const remaining = removeTiles(sorted, [first, first, first]);
+    if (canFormExactlyNSets(remaining, setsNeeded - 1)) return true;
+  }
+
+  if (['character', 'bamboo', 'dot'].includes(first.suit)) {
+    const v = first.value;
+    const p1 = sorted.find((t) => t.suit === first.suit && t.value === v + 1);
+    const p2 = sorted.find((t) => t.suit === first.suit && t.value === v + 2);
+    if (p1 && p2) {
+      const remaining = removeTiles(sorted, [first, p1, p2]);
+      if (canFormExactlyNSets(remaining, setsNeeded - 1)) return true;
+    }
+  }
+
+  return false;
+};
+
+const checkSevenPairs = (hand: TileType[]): boolean => {
+  if (hand.length !== 14) return false;
+  const counts = getTileCounts(hand);
+  const groups = Object.values(counts);
+  return groups.length === 7 && groups.every((c) => c === 2);
+};
+
+/** Standard win: (4 - open melds) concealed sets + one pair. Seven pairs when no melds. */
+export const checkWin = (hand: TileType[], melds: Meld[] = []): boolean => {
+  const meldCount = melds.length;
+  if (meldCount > 4) return false;
+
+  if (meldCount === 0 && checkSevenPairs(hand)) return true;
+
+  const setsNeeded = 4 - meldCount;
+  const expectedLen = setsNeeded * 3 + 2;
+  if (hand.length !== expectedLen) return false;
+
+  const sorted = sortHand(hand);
+  const uniqueTiles = Array.from(new Set(sorted.map((t) => `${t.suit}-${t.value}`)));
+
   for (const key of uniqueTiles) {
     const [s, v] = key.split('-');
-    const suit = s as any;
-    const value = parseInt(v);
-    const pairTiles = sorted.filter(t => t.suit === suit && t.value === value);
+    const suit = s as TileType['suit'];
+    const value = parseInt(v, 10);
+    const pairTiles = sorted.filter((t) => t.suit === suit && t.value === value);
     if (pairTiles.length >= 2) {
-      const remaining = removeTiles(sorted, [{suit, value} as TileType, {suit, value} as TileType]);
-      if (canFormSets(remaining)) return true;
+      const remaining = removeTiles(sorted, [
+        { suit, value } as TileType,
+        { suit, value } as TileType,
+      ]);
+      if (canFormExactlyNSets(remaining, setsNeeded)) return true;
     }
   }
   return false;
 };
+
+export const checkRon = (hand: TileType[], tile: TileType, melds: Meld[] = []): boolean =>
+  checkWin([...hand, tile], melds);
 
 const removeTiles = (source: TileType[], toRemove: TileType[]): TileType[] => {
   const result = [...source];
@@ -144,33 +190,47 @@ export const checkCanPong = (hand: TileType[], tile: TileType): boolean => {
   return count >= 2;
 };
 
-export const checkCanGang = (hand: TileType[], tile: TileType | null, type: 'draw' | 'discard'): GangOption[] => {
-    const options: GangOption[] = [];
-    const counts = getTileCounts(hand);
+export const checkCanGang = (
+  hand: TileType[],
+  tile: TileType | null,
+  type: 'draw' | 'discard',
+  melds: Meld[] = []
+): GangOption[] => {
+  const options: GangOption[] = [];
+  const counts = getTileCounts(hand);
 
-    if (type === 'discard' && tile) {
-        // Ming Gang (Point Gang)
-        const key = `${tile.suit}-${tile.value}`;
-        if (counts[key] === 3) {
-            const tiles = hand.filter(t => t.suit === tile.suit && t.value === tile.value);
-            options.push({ type: 'MINGGANG', tiles });
-        }
-    } else if (type === 'draw') {
-        // An Gang (Dark Gang)
-        Object.entries(counts).forEach(([key, count]) => {
-            if (count === 4) {
-                const [s, v] = key.split('-');
-                const suit = s as any;
-                const value = parseInt(v);
-                const tiles = hand.filter(t => t.suit === suit && t.value === value);
-                options.push({ type: 'ANGANG', tiles });
-            }
-        });
-        // Bu Gang (Add Gang) - requires checking Melds (passed separately or check logic elsewhere)
-        // Note: Standard logic usually checks melds in Store
+  if (type === 'discard' && tile) {
+    const key = `${tile.suit}-${tile.value}`;
+    if (counts[key] === 3) {
+      const tiles = hand.filter((t) => t.suit === tile.suit && t.value === tile.value);
+      options.push({ type: 'MINGGANG', tiles });
     }
+  } else if (type === 'draw') {
+    Object.entries(counts).forEach(([key, count]) => {
+      if (count === 4) {
+        const [s, v] = key.split('-');
+        const suit = s as TileType['suit'];
+        const value = parseInt(v, 10);
+        const tiles = hand.filter((t) => t.suit === suit && t.value === value);
+        options.push({ type: 'ANGANG', tiles });
+      }
+    });
 
-    return options;
+    melds.forEach((meld, meldIndex) => {
+      if (meld.type !== 'pong' || meld.tiles.length < 3) return;
+      const t0 = meld.tiles[0];
+      const match = hand.filter((t) => t.suit === t0.suit && t.value === t0.value);
+      if (match.length >= 1) {
+        options.push({
+          type: 'BUGANG',
+          tiles: [...meld.tiles, match[0]],
+          meldIndex,
+        });
+      }
+    });
+  }
+
+  return options;
 };
 
 export const checkCanChi = (hand: TileType[], tile: TileType): ChiOption[] => {

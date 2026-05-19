@@ -1,0 +1,214 @@
+{
+  "version": 1,
+  "voice": "zh-CN-XiaoyiNeural (Microsoft Edge TTS)",
+  "rate": "+22%",
+  "style": "女声俏皮、偏快、适合打牌报牌",
+  "license_note": "Edge TTS 生成，请遵守 Microsoft 服务条款；可用于个人/游戏项目",
+  "tiles": [
+    {
+      "id": "feng_bei",
+      "text": "北",
+      "file": "feng_bei.mp3",
+      "duration_sec": 0.984
+    },
+    {
+      "id": "feng_dong",
+      "text": "东",
+      "file": "feng_dong.mp3",
+      "duration_sec": 1.008
+    },
+    {
+      "id": "feng_nan",
+      "text": "南",
+      "file": "feng_nan.mp3",
+      "duration_sec": 1.128
+    },
+    {
+      "id": "feng_xi",
+      "text": "西",
+      "file": "feng_xi.mp3",
+      "duration_sec": 1.152
+    },
+    {
+      "id": "jian_bai",
+      "text": "白板",
+      "file": "jian_bai.mp3",
+      "duration_sec": 1.2
+    },
+    {
+      "id": "jian_fa",
+      "text": "发财",
+      "file": "jian_fa.mp3",
+      "duration_sec": 1.272
+    },
+    {
+      "id": "jian_zhong",
+      "text": "红中",
+      "file": "jian_zhong.mp3",
+      "duration_sec": 1.248
+    },
+    {
+      "id": "tiao_01",
+      "text": "一条",
+      "file": "tiao_01.mp3",
+      "duration_sec": 1.272
+    },
+    {
+      "id": "tiao_02",
+      "text": "二条",
+      "file": "tiao_02.mp3",
+      "duration_sec": 1.296
+    },
+    {
+      "id": "tiao_03",
+      "text": "三条",
+      "file": "tiao_03.mp3",
+      "duration_sec": 1.368
+    },
+    {
+      "id": "tiao_04",
+      "text": "四条",
+      "file": "tiao_04.mp3",
+      "duration_sec": 1.392
+    },
+    {
+      "id": "tiao_05",
+      "text": "五条",
+      "file": "tiao_05.mp3",
+      "duration_sec": 1.344
+    },
+    {
+      "id": "tiao_06",
+      "text": "六条",
+      "file": "tiao_06.mp3",
+      "duration_sec": 1.32
+    },
+    {
+      "id": "tiao_07",
+      "text": "七条",
+      "file": "tiao_07.mp3",
+      "duration_sec": 1.368
+    },
+    {
+      "id": "tiao_08",
+      "text": "八条",
+      "file": "tiao_08.mp3",
+      "duration_sec": 1.344
+    },
+    {
+      "id": "tiao_09",
+      "text": "九条",
+      "file": "tiao_09.mp3",
+      "duration_sec": 1.32
+    },
+    {
+      "id": "tong_01",
+      "text": "一筒",
+      "file": "tong_01.mp3",
+      "duration_sec": 1.248
+    },
+    {
+      "id": "tong_02",
+      "text": "二筒",
+      "file": "tong_02.mp3",
+      "duration_sec": 1.248
+    },
+    {
+      "id": "tong_03",
+      "text": "三筒",
+      "file": "tong_03.mp3",
+      "duration_sec": 1.296
+    },
+    {
+      "id": "tong_04",
+      "text": "四筒",
+      "file": "tong_04.mp3",
+      "duration_sec": 1.32
+    },
+    {
+      "id": "tong_05",
+      "text": "五筒",
+      "file": "tong_05.mp3",
+      "duration_sec": 1.2
+    },
+    {
+      "id": "tong_06",
+      "text": "六筒",
+      "file": "tong_06.mp3",
+      "duration_sec": 1.2
+    },
+    {
+      "id": "tong_07",
+      "text": "七筒",
+      "file": "tong_07.mp3",
+      "duration_sec": 1.272
+    },
+    {
+      "id": "tong_08",
+      "text": "八筒",
+      "file": "tong_08.mp3",
+      "duration_sec": 1.2
+    },
+    {
+      "id": "tong_09",
+      "text": "九筒",
+      "file": "tong_09.mp3",
+      "duration_sec": 1.272
+    },
+    {
+      "id": "wan_01",
+      "text": "一万",
+      "file": "wan_01.mp3",
+      "duration_sec": 1.2
+    },
+    {
+      "id": "wan_02",
+      "text": "二万",
+      "file": "wan_02.mp3",
+      "duration_sec": 1.2
+    },
+    {
+      "id": "wan_03",
+      "text": "三万",
+      "file": "wan_03.mp3",
+      "duration_sec": 1.296
+    },
+    {
+      "id": "wan_04",
+      "text": "四万",
+      "file": "wan_04.mp3",
+      "duration_sec": 1.272
+    },
+    {
+      "id": "wan_05",
+      "text": "五万",
+      "file": "wan_05.mp3",
+      "duration_sec": 1.176
+    },
+    {
+      "id": "wan_06",
+      "text": "六万",
+      "file": "wan_06.mp3",
+      "duration_sec": 1.248
+    },
+    {
+      "id": "wan_07",
+      "text": "七万",
+      "file": "wan_07.mp3",
+      "duration_sec": 1.272
+    },
+    {
+      "id": "wan_08",
+      "text": "八万",
+      "file": "wan_08.mp3",
+      "duration_sec": 1.2
+    },
+    {
+      "id": "wan_09",
+      "text": "九万",
+      "file": "wan_09.mp3",
+      "duration_sec": 1.224
+    }
+  ],
+  "count": 34
+}

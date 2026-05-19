@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
 import { Hand } from './Hand';
+import { GameOverBanner } from './GameOverBanner';
 import { Discards } from './Discards';
 import { Tile } from './Tile';
 import { ActionBurst } from '@/components/motion/ActionBurst';
@@ -15,7 +16,9 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog"
-import { ArrowLeftRight, ArrowLeft, RotateCcw, Maximize2 } from 'lucide-react';
+import { ArrowLeftRight, ArrowLeft, RotateCcw, Maximize2, Volume2, VolumeX } from 'lucide-react';
+import { preloadMahjongSounds } from '@/lib/mahjong/sounds';
+import { useUiStore } from '@/store/uiStore';
 import { dictionaries, formatString } from '@/lib/i18n';
 import { useLanguageStore } from '@/store/languageStore';
 import Link from 'next/link';
@@ -41,10 +44,12 @@ export const MahjongTable = () => {
         winningHand,
         deck,
         actionOptions,
-        recentAction
+        recentAction,
+        drewThisTurn,
     } = useGameStore();
 
     const { language } = useLanguageStore();
+    const { soundEnabled, toggleSound } = useUiStore();
     const t = dictionaries[language];
 
     const [showChiSelection, setShowChiSelection] = useState(false);
@@ -52,14 +57,27 @@ export const MahjongTable = () => {
     const [isGameOverDialogOpen, setIsGameOverDialogOpen] = useState(false);
     const [showLandscapeHint, setShowLandscapeHint] = useState(false);
 
-    // Sync game phase with dialog visibility
     useEffect(() => {
         if (gamePhase === 'finished') {
             setIsGameOverDialogOpen(true);
         } else {
             setIsGameOverDialogOpen(false);
+            setShowChiSelection(false);
+            setShowGangSelection(false);
         }
     }, [gamePhase]);
+
+    useEffect(() => {
+        if (
+            !actionOptions.canHu &&
+            actionOptions.canGang.length === 0 &&
+            !actionOptions.canPeng &&
+            actionOptions.canChi.length === 0
+        ) {
+            setShowChiSelection(false);
+            setShowGangSelection(false);
+        }
+    }, [actionOptions]);
 
     // Scaling Logic
     const [scale, setScale] = useState(1);
@@ -92,14 +110,16 @@ export const MahjongTable = () => {
 
         checkOrientation();
         window.addEventListener('resize', checkOrientation);
-        return () => window.removeEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+        return () => {
+            window.removeEventListener('resize', checkOrientation);
+            window.removeEventListener('orientationchange', checkOrientation);
+        };
     }, [isMobile]);
 
     const handleFullScreen = () => {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(e => {
-                console.log(`Error attempting to enable full-screen mode: ${e.message} (${e.name})`);
-            });
+            document.documentElement.requestFullscreen().catch(() => {});
         } else {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
@@ -136,8 +156,8 @@ export const MahjongTable = () => {
         // Start the game immediately
         initGame();
 
-        // Silent background preloading (non-blocking, no UI)
         preloadAllTileImages();
+        preloadMahjongSounds();
     }, [initGame]);
 
     const getTranslatedMessage = () => {
@@ -231,6 +251,17 @@ export const MahjongTable = () => {
                     >
                         <Maximize2 size={20} />
                     </Button>
+
+                    <Button
+                        variant="secondary"
+                        size="icon"
+                        className="absolute top-28 right-4 z-[60] h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 text-white border border-white/10 shadow-lg mt-2 active:scale-[0.98] transition-transform"
+                        onClick={toggleSound}
+                        title={soundEnabled ? t.soundOn : t.soundOff}
+                        aria-pressed={soundEnabled}
+                    >
+                        {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                    </Button>
                 </>
             )}
 
@@ -255,14 +286,24 @@ export const MahjongTable = () => {
                     <p className="text-base text-white/70 mb-8 max-w-sm leading-relaxed">
                         {t.landscapeHint}
                     </p>
-                    <Button
-                        size="lg"
-                        onClick={handleFullScreen}
-                        className="bg-[var(--mahjong-gold)] hover:opacity-90 text-green-950 font-bold border-none active:scale-[0.98] transition-transform"
-                    >
-                        <Maximize2 className="mr-2" size={20} />
-                        {t.fullscreen}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                            size="lg"
+                            onClick={handleFullScreen}
+                            className="bg-[var(--mahjong-gold)] hover:opacity-90 text-green-950 font-bold border-none active:scale-[0.98] transition-transform"
+                        >
+                            <Maximize2 className="mr-2" size={20} />
+                            {t.fullscreen}
+                        </Button>
+                        <Button
+                            size="lg"
+                            variant="outline"
+                            className="border-white/30 text-white hover:bg-white/10"
+                            onClick={() => setShowLandscapeHint(false)}
+                        >
+                            {t.continuePortrait}
+                        </Button>
+                    </div>
                 </motion.div>
             )}
 
@@ -297,6 +338,19 @@ export const MahjongTable = () => {
                                 <span>{t.remaining}</span>
                                 <span className="font-mono text-white font-bold tabular-nums">{deck.length}</span>
                             </motion.div>
+                            {!isMobile && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
+                                    onClick={toggleSound}
+                                    title={soundEnabled ? t.soundOn : t.soundOff}
+                                    aria-pressed={soundEnabled}
+                                >
+                                    {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                                </Button>
+                            )}
                         </motion.div>
 
                         {/* Main Content Area */}
@@ -395,7 +449,7 @@ export const MahjongTable = () => {
                                 size="icon"
                                 className="absolute -right-12 h-8 w-8 rounded-full bg-black/40 hover:bg-black/60 text-white border-none shadow-lg"
                                 onClick={() => playerAction('sort')}
-                                title="Auto Sort Hand"
+                                title={t.sortHand}
                             >
                                 <ArrowLeftRight size={16} />
                             </Button>
@@ -466,8 +520,15 @@ export const MahjongTable = () => {
                         tiles={human.hand}
                         melds={human.melds}
                         isCurrentPlayer={currentPlayer === 0}
+                        separateDrawnTile={currentPlayer === 0 && drewThisTurn}
                         onTileClick={(id) => {
-                            if (currentPlayer === 0 && !actionOptions.canHu) discardTile(id);
+                            if (
+                                currentPlayer === 0 &&
+                                gamePhase === 'playing' &&
+                                !actionOptions.canHu
+                            ) {
+                                discardTile(id);
+                            }
                         }}
                     />
                 </div>
@@ -523,33 +584,53 @@ export const MahjongTable = () => {
             </Dialog>
 
             {/* Game Over Dialog - Outside scaled container */}
-            <Dialog open={isGameOverDialogOpen} onOpenChange={setIsGameOverDialogOpen}>
-                <DialogContent className="max-w-[95vw] w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-                    <DialogHeader>
-                        <DialogTitle className="font-display text-2xl font-bold text-center">{t.gameOver}</DialogTitle>
+            <Dialog
+                open={isGameOverDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open && gamePhase === 'finished') {
+                        resetGame();
+                        return;
+                    }
+                    setIsGameOverDialogOpen(open);
+                }}
+            >
+                <DialogContent className="max-w-[95vw] w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 border-0 shadow-2xl">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>{t.gameOver}</DialogTitle>
                     </DialogHeader>
-                    <div className="py-2 sm:py-6 flex flex-col items-center w-full">
+                    <div className="py-1 sm:py-4 flex flex-col items-center w-full">
                         {winner !== null ? (
                             <div className="w-full flex flex-col items-center">
-                                <p className="text-xl font-bold text-green-600 mb-6">{formatString(t.playerWins, { index: winner })}</p>
+                                <GameOverBanner
+                                    variant={winner === 0 ? 'win' : 'lose'}
+                                    title={winner === 0 ? t.gameOverYouWin : t.gameOverYouLose}
+                                    subtitle={
+                                        winner !== 0
+                                            ? formatString(t.playerWins, { index: winner })
+                                            : undefined
+                                    }
+                                />
 
-                                <div className="w-full bg-green-950/5 p-2 sm:p-6 rounded-2xl border border-green-900/15 shadow-inner flex flex-col items-center">
+                                <motion.div
+                                    className={`w-full p-2 sm:p-6 rounded-2xl border shadow-inner flex flex-col items-center ${
+                                        winner === 0
+                                            ? 'bg-red-950/5 border-red-900/12'
+                                            : 'bg-blue-950/5 border-blue-900/12'
+                                    }`}
+                                >
                                     <p className="text-sm text-gray-500 mb-2 self-start px-2 sm:px-4">{t.winningHand}</p>
                                     <div className="w-full flex justify-center overflow-x-auto p-2 no-scrollbar">
-                                        {/* Use the Hand component to render melds + hand properly */}
-                                        <div className="scale-[0.6] sm:scale-[0.7] md:scale-[0.85] lg:scale-100 origin-center">
                                             <Hand
                                                 tiles={winningHand || []}
                                                 melds={players[winner].melds}
                                                 hidden={false}
                                                 isWinningHand={true}
                                             />
-                                        </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
                         ) : (
-                            <p className="text-xl text-gray-600">Draw!</p>
+                            <GameOverBanner variant="draw" title={t.drawGame} />
                         )}
                     </div>
                     <DialogFooter className="sm:justify-center w-full">

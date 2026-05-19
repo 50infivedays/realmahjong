@@ -36,15 +36,11 @@ const decideAiTurn = (gameState: GameState, playerIndex: PlayerIndex): AiAction 
     const { hand, melds } = player;
 
     // 1. Check Win (Tsumo)
-    if (checkWin(hand)) {
+    if (checkWin(hand, melds)) {
         return { type: 'win' };
     }
 
-    // 2. Check Gang (AnGang / BuGang)
-    // Simplify: If AnGang doesn't increase Shanten (it usually decreases or keeps same), do it?
-    // Design doc says: generate all legal actions.
-    
-    const gangOptions = checkCanGang(hand, null, 'draw');
+    const gangOptions = checkCanGang(hand, null, 'draw', melds);
     const legalActions: { action: AiAction; score: number }[] = [];
 
     // Discard actions
@@ -90,13 +86,10 @@ const decideAiTurn = (gameState: GameState, playerIndex: PlayerIndex): AiAction 
 
 const decideAiClaimInternal = (gameState: GameState, playerIndex: PlayerIndex, tile: TileType): AiAction => {
     const player = gameState.players[playerIndex];
-    const { hand } = player;
+    const { hand, melds } = player;
 
-    // 1. Check Win (Ron)
-    // Try adding tile to hand temporarily
-    const testHand = [...hand, tile];
-    if (checkWin(testHand)) {
-        return { type: 'win' }; // Priority: Always win if possible (unless config says otherwise, but usually YES)
+    if (checkWin([...hand, tile], melds)) {
+        return { type: 'win' };
     }
 
     // 2. Generate Options
@@ -113,7 +106,7 @@ const decideAiClaimInternal = (gameState: GameState, playerIndex: PlayerIndex, t
     }
 
     // Kong (MingGang)
-    const gangOpts = checkCanGang(hand, tile, 'discard');
+    const gangOpts = checkCanGang(hand, tile, 'discard', melds);
     if (gangOpts.length > 0) {
          options.push({ action: { type: 'gang', tiles: gangOpts[0].tiles, gangType: 'MINGGANG' }, score: -Infinity });
     }
@@ -378,7 +371,7 @@ const simulate = (state: SimState, depth: number): SimResult => {
         state.wallCount--;
         
         // Check Win
-        if (checkWin(state.myHand)) {
+        if (checkWin(state.myHand, state.myMelds)) {
             return { win: true, minShanten: -1, danger };
         }
         

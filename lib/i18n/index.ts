@@ -66,7 +66,15 @@ export type TranslationKey =
   | 'chooseKong'
   | 'loading'
   | 'restartGame'
-  | 'fullscreen';
+  | 'fullscreen'
+  | 'soundOn'
+  | 'soundOff'
+  | 'sortHand'
+  | 'youWin'
+  | 'gameOverYouWin'
+  | 'gameOverYouLose'
+  | 'drawGame'
+  | 'continuePortrait';
 
 export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
   en: {
@@ -136,6 +144,14 @@ export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     loading: 'Loading table…',
     restartGame: 'Restart game',
     fullscreen: 'Full screen',
+    soundOn: 'Sound on',
+    soundOff: 'Sound off',
+    sortHand: 'Auto sort hand',
+    youWin: 'You win!',
+    gameOverYouWin: 'YOU WIN',
+    gameOverYouLose: 'YOU LOSE',
+    drawGame: 'Draw — no tiles left',
+    continuePortrait: 'Continue in portrait',
   },
   zh: {
     welcome: '欢迎来到麻将游戏！',
@@ -204,6 +220,14 @@ export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     loading: '正在加载牌桌…',
     restartGame: '重新开始',
     fullscreen: '全屏',
+    soundOn: '音效开',
+    soundOff: '音效关',
+    sortHand: '自动理牌',
+    youWin: '你赢了！',
+    gameOverYouWin: '你赢了',
+    gameOverYouLose: '你输了',
+    drawGame: '流局',
+    continuePortrait: '竖屏继续',
   }
 };
 

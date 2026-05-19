@@ -36,6 +36,8 @@ export type GangType = 'ANGANG' | 'MINGGANG' | 'BUGANG';
 export type GangOption = {
     type: GangType;
     tiles: TileType[];
+    /** Index into player.melds for BUGANG (upgrade pong → kong) */
+    meldIndex?: number;
 };
 
 export type ChiOption = {

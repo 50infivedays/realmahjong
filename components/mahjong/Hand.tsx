@@ -12,10 +12,20 @@ interface HandProps {
   onTileClick?: (tileId: string) => void;
   isCurrentPlayer?: boolean;
   hidden?: boolean; // For AI players
-  isWinningHand?: boolean; // New prop to control display style
+  isWinningHand?: boolean;
+  /** Separate last tile only after drawing (not after pong/chow) */
+  separateDrawnTile?: boolean;
 }
 
-export const Hand: React.FC<HandProps> = ({ tiles, melds, onTileClick, isCurrentPlayer, hidden, isWinningHand }) => {
+export const Hand: React.FC<HandProps> = ({
+  tiles,
+  melds,
+  onTileClick,
+  isCurrentPlayer,
+  hidden,
+  isWinningHand,
+  separateDrawnTile = false,
+}) => {
   // Identify if the last tile should be separated (just drawn)
   // Logic: If it's current player's turn (and not hidden/AI), and hand length is 14 (13+1), 
   // usually the last tile is the drawn one if we didn't sort it yet.
@@ -24,8 +34,8 @@ export const Hand: React.FC<HandProps> = ({ tiles, melds, onTileClick, isCurrent
   // If it is winning hand display, we don't want to separate the last tile, 
   // and we want all tiles (including melds) to be same size.
   
-  const handLength = tiles.length;
-  const hasDrawnTile = !isWinningHand && handLength % 3 === 2; 
+  const hasDrawnTile =
+    !isWinningHand && separateDrawnTile && isCurrentPlayer && tiles.length > 0;
   
   return (
     <div className={cn("flex gap-2 items-end", isWinningHand && "scale-[0.6] sm:scale-[0.7] md:scale-[0.85] lg:scale-100 origin-center")}>
