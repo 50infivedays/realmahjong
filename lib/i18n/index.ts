@@ -57,7 +57,16 @@ export type TranslationKey =
   | 'contactTitle'
   | 'contactContent'
   | 'privacyTitle'
-  | 'privacyContent';
+  | 'privacyContent'
+  | 'lastDiscard'
+  | 'waiting'
+  | 'landscapeRotate'
+  | 'landscapeHint'
+  | 'chooseChow'
+  | 'chooseKong'
+  | 'loading'
+  | 'restartGame'
+  | 'fullscreen';
 
 export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
   en: {
@@ -118,6 +127,15 @@ export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     contactContent: 'We value your feedback! If you have any questions, bug reports, or suggestions, please reach out to us at:',
     privacyTitle: 'Privacy Policy',
     privacyContent: 'RealMahjong respects your privacy. We do not collect any personal information. All game data is processed locally on your device or temporarily for game logic purposes only. We use Google Analytics to understand website traffic, but no personally identifiable information is stored.',
+    lastDiscard: 'Last discard',
+    waiting: 'Waiting',
+    landscapeRotate: 'Rotate your device',
+    landscapeHint: 'For the best experience, switch to landscape mode and use full screen.',
+    chooseChow: 'Choose Chow',
+    chooseKong: 'Choose Kong',
+    loading: 'Loading table…',
+    restartGame: 'Restart game',
+    fullscreen: 'Full screen',
   },
   zh: {
     welcome: '欢迎来到麻将游戏！',
@@ -177,6 +195,15 @@ export const dictionaries: Record<Language, Record<TranslationKey, string>> = {
     contactContent: '我们重视您的反馈！如果您有任何问题、错误报告或建议，请通过以下方式联系我们：',
     privacyTitle: '隐私政策',
     privacyContent: '正宗麻将尊重您的隐私。我们不会收集任何个人信息。所有游戏数据仅在您的设备上本地处理，或仅用于游戏逻辑的临时处理。我们使用 Google Analytics 来了解网站流量，但不会存储任何个人身份信息。',
+    lastDiscard: '最新打出的牌',
+    waiting: '等待出牌',
+    landscapeRotate: '请旋转设备',
+    landscapeHint: '为获得最佳体验，请切换至横屏并开启全屏。',
+    chooseChow: '选择吃牌',
+    chooseKong: '选择杠牌',
+    loading: '正在加载牌桌…',
+    restartGame: '重新开始',
+    fullscreen: '全屏',
   }
 };
 

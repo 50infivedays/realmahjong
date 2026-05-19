@@ -1,10 +1,13 @@
 "use client";
 import React, { useEffect, useState, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
 import { Hand } from './Hand';
 import { Discards } from './Discards';
 import { Tile } from './Tile';
+import { ActionBurst } from '@/components/motion/ActionBurst';
 import { Button } from '@/components/ui/button';
+import { springBouncy, springSmooth, springSnappy } from '@/lib/motion';
 import {
     Dialog,
     DialogContent,
@@ -147,8 +150,14 @@ export const MahjongTable = () => {
 
     if (players.length === 0) {
         return (
-            <div className="flex items-center justify-center h-full text-white">
-                <div className="text-lg font-bold">Loading...</div>
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-white">
+                <motion.div
+                    className="w-48 h-3 rounded-full shimmer-skeleton"
+                    aria-hidden
+                />
+                <p className="text-sm font-medium text-[var(--mahjong-gold-muted)] tracking-wide">
+                    {t.loading}
+                </p>
             </div>
         );
     }
@@ -186,7 +195,13 @@ export const MahjongTable = () => {
     };
 
     return (
-        <div className="flex items-center justify-center h-full w-full bg-green-800 overflow-hidden relative select-none">
+        <motion.div
+            className="flex items-center justify-center h-full w-full mahjong-felt overflow-hidden relative select-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.35 }}
+        >
+            <div className="mahjong-felt-vignette absolute inset-0 pointer-events-none" aria-hidden />
             {/* Back to Home Button - Visible only on mobile */}
             {isMobile && (
                 <Link href="/" className="absolute top-4 left-4 z-[60] rounded-full hover:opacity-80 transition-opacity shadow-lg">
@@ -200,9 +215,9 @@ export const MahjongTable = () => {
                     <Button
                         variant="secondary"
                         size="icon"
-                        className="absolute top-4 right-4 z-[60] h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 text-white border-none shadow-lg"
+                        className="absolute top-4 right-4 z-[60] h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 text-white border border-white/10 shadow-lg active:scale-[0.98] transition-transform"
                         onClick={resetGame}
-                        title="Restart Game"
+                        title={t.restartGame}
                     >
                         <RotateCcw size={20} />
                     </Button>
@@ -212,7 +227,7 @@ export const MahjongTable = () => {
                         size="icon"
                         className="absolute top-16 right-4 z-[60] h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 text-white border-none shadow-lg mt-2"
                         onClick={handleFullScreen}
-                        title="Toggle Full Screen"
+                        title={t.fullscreen}
                     >
                         <Maximize2 size={20} />
                     </Button>
@@ -221,17 +236,34 @@ export const MahjongTable = () => {
 
             {/* Landscape Hint Overlay */}
             {showLandscapeHint && (
-                <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center text-white p-8 text-center animate-in fade-in duration-300">
-                    <div className="w-20 h-20 mb-6 animate-bounce">
-                        <RotateCcw size={80} className="text-yellow-400 rotate-90" />
-                    </div>
-                    <h2 className="text-2xl font-bold mb-4 text-yellow-300">Please Rotate Your Device</h2>
-                    <p className="text-lg text-gray-300 mb-8">For the best experience, please switch to landscape mode and use full screen.</p>
-                    <Button size="lg" onClick={handleFullScreen} className="bg-green-600 hover:bg-green-700 text-white border-none">
+                <motion.div
+                    className="fixed inset-0 z-[100] bg-black/92 flex flex-col items-center justify-center text-white p-8 text-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.25 }}
+                >
+                    <motion.div
+                        className="w-20 h-20 mb-6"
+                        animate={{ rotate: [90, 0, 90] }}
+                        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                        <RotateCcw size={80} className="text-[var(--mahjong-gold)]" />
+                    </motion.div>
+                    <h2 className="font-display text-2xl font-bold mb-4 text-[var(--mahjong-gold)]">
+                        {t.landscapeRotate}
+                    </h2>
+                    <p className="text-base text-white/70 mb-8 max-w-sm leading-relaxed">
+                        {t.landscapeHint}
+                    </p>
+                    <Button
+                        size="lg"
+                        onClick={handleFullScreen}
+                        className="bg-[var(--mahjong-gold)] hover:opacity-90 text-green-950 font-bold border-none active:scale-[0.98] transition-transform"
+                    >
                         <Maximize2 className="mr-2" size={20} />
-                        Enter Full Screen
+                        {t.fullscreen}
                     </Button>
-                </div>
+                </motion.div>
             )}
 
             {/* Logical Game Container */}
@@ -241,53 +273,76 @@ export const MahjongTable = () => {
                     height: GAME_HEIGHT,
                     transform: `scale(${scale})`,
                 }}
-                className="relative bg-green-800 shrink-0 shadow-2xl will-change-transform"
+                className="relative shrink-0 will-change-transform mahjong-table-rim"
             >
 
                 {/* --- Central Table Area (Discards & Info) --- */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none">
 
                     {/* Center Info Box */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 bg-green-900/90 rounded-xl border-2 border-green-700/50 flex flex-col items-center text-white shadow-2xl z-10 pointer-events-auto">
+                    <motion.div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 mahjong-glass rounded-2xl flex flex-col items-center text-white z-10 pointer-events-auto">
 
                         {/* Header: Round Wind & Remaining */}
-                        <div className="w-full flex justify-between items-center px-3 py-2 border-b border-green-800/50 bg-green-950/30 rounded-t-xl">
-                            <div className="flex items-center gap-1 text-yellow-500">
-                                <span className="text-sm font-bold">{t.windEast}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-gray-400 text-xs">
+                        <motion.div className="w-full flex justify-between items-center px-3 py-2 border-b border-white/10 bg-black/20 rounded-t-2xl">
+                            <span className="text-sm font-bold font-display text-[var(--mahjong-gold)] tracking-tight">
+                                {t.windEast}
+                            </span>
+                            <motion.div
+                                className="flex items-center gap-1 text-white/50 text-xs"
+                                key={deck.length}
+                                initial={{ scale: 1.12, opacity: 0.65 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={springSnappy}
+                            >
                                 <span>{t.remaining}</span>
-                                <span className="font-mono text-white font-bold">{deck.length}</span>
-                            </div>
-                        </div>
+                                <span className="font-mono text-white font-bold tabular-nums">{deck.length}</span>
+                            </motion.div>
+                        </motion.div>
 
                         {/* Main Content Area */}
                         <div className="flex-1 w-full flex flex-col items-center justify-center relative p-2">
 
                             {/* Last Discard Display - Central Focus */}
                             <div className="relative flex flex-col items-center justify-center min-h-[80px]">
-                                {lastDiscard ? (
-                                    <div className="animate-in fade-in zoom-in duration-200 shadow-[0_0_15px_rgba(255,255,0,0.3)] scale-150">
-                                        <Tile tile={lastDiscard} />
-                                    </div>
-                                ) : (
-                                    <div className="w-10 h-14 rounded border border-white/10 bg-white/5 flex items-center justify-center scale-150">
-                                        <div className="w-3 h-3 rounded-full bg-white/10" />
-                                    </div>
-                                )}
-                                <span className="text-[10px] text-green-400/60 mt-1 uppercase tracking-wider font-bold pt-4">
-                                    {lastDiscard ? 'Last Discard' : 'Waiting'}
+                                <AnimatePresence mode="wait">
+                                    {lastDiscard ? (
+                                        <motion.div
+                                            key={lastDiscard.id}
+                                            className="scale-150 shadow-[0_0_20px_oklch(0.75_0.12_85/0.35)]"
+                                            initial={{ opacity: 0, scale: 1.2, y: -8 }}
+                                            animate={{ opacity: 1, scale: 1.5, y: 0 }}
+                                            exit={{ opacity: 0, scale: 1.3 }}
+                                            transition={springBouncy}
+                                        >
+                                            <Tile tile={lastDiscard} />
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key="empty"
+                                            className="w-10 h-14 rounded-md border border-white/10 bg-white/5 flex items-center justify-center scale-150"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                        >
+                                            <div className="w-3 h-3 rounded-full bg-white/15" aria-hidden />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                                <span className="text-[10px] text-[var(--mahjong-gold-muted)]/80 mt-1 uppercase tracking-widest font-semibold pt-4">
+                                    {lastDiscard ? t.lastDiscard : t.waiting}
                                 </span>
                             </div>
 
                             {/* Game Status Message */}
                             <div className="absolute bottom-2 left-0 w-full px-2 text-center">
-                                <div className="text-xs font-medium text-yellow-200 bg-black/20 rounded py-1 px-2 truncate shadow-inner">
+                                <div
+                                    className="text-xs font-medium text-[var(--mahjong-gold)]/90 bg-black/25 rounded-lg py-1.5 px-2 truncate border border-white/5"
+                                    aria-live="polite"
+                                >
                                     {getTranslatedMessage()}
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Discards Areas - Positioned around center */}
 
@@ -348,7 +403,12 @@ export const MahjongTable = () => {
 
                         {/* Action Buttons */}
                         {(actionOptions.canHu || actionOptions.canGang.length > 0 || actionOptions.canPeng || actionOptions.canChi.length > 0) && (
-                            <div className="flex gap-3 bg-black/70 p-3 rounded-xl backdrop-blur-md animate-in slide-in-from-bottom-10 shadow-2xl border border-white/10">
+                            <motion.div
+                                className="flex gap-3 bg-black/70 p-3 rounded-2xl backdrop-blur-md shadow-2xl border border-white/10"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={springSmooth}
+                            >
 
                                 {/* HU Button */}
                                 {actionOptions.canHu && (
@@ -398,7 +458,7 @@ export const MahjongTable = () => {
                                 >
                                     {t.btnPass || "Pass"}
                                 </Button>
-                            </div>
+                            </motion.div>
                         )}
                     </div>
 
@@ -412,14 +472,11 @@ export const MahjongTable = () => {
                     />
                 </div>
 
-                {/* Action Effect Overlay */}
-                {recentAction && (
-                    <div className={`absolute ${getActionPosition(recentAction.playerIndex)} z-50 pointer-events-none animate-in zoom-in-50 duration-300`}>
-                        <div className="text-6xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] border-4 border-yellow-600 px-8 py-4 rounded-xl bg-black/70 backdrop-blur-sm transform scale-110 shadow-[0_0_30px_rgba(255,215,0,0.5)]">
-                            {getActionText(recentAction.type)}
-                        </div>
-                    </div>
-                )}
+                <ActionBurst
+                    visible={!!recentAction}
+                    label={recentAction ? getActionText(recentAction.type) : ""}
+                    positionClass={recentAction ? getActionPosition(recentAction.playerIndex) : "hidden"}
+                />
 
             </div>
 
@@ -427,7 +484,7 @@ export const MahjongTable = () => {
             <Dialog open={showChiSelection} onOpenChange={setShowChiSelection}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Choose Chow</DialogTitle>
+                        <DialogTitle className="font-display">{t.chooseChow}</DialogTitle>
                     </DialogHeader>
                     <div className="flex gap-4 justify-center py-4">
                         {actionOptions.canChi.map((opt, idx) => (
@@ -446,7 +503,7 @@ export const MahjongTable = () => {
             <Dialog open={showGangSelection} onOpenChange={setShowGangSelection}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Choose Kong</DialogTitle>
+                        <DialogTitle className="font-display">{t.chooseKong}</DialogTitle>
                     </DialogHeader>
                     <div className="flex gap-4 justify-center py-4 flex-wrap">
                         {actionOptions.canGang.map((opt, idx) => (
@@ -469,14 +526,14 @@ export const MahjongTable = () => {
             <Dialog open={isGameOverDialogOpen} onOpenChange={setIsGameOverDialogOpen}>
                 <DialogContent className="max-w-[95vw] w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold text-center">{t.gameOver}</DialogTitle>
+                        <DialogTitle className="font-display text-2xl font-bold text-center">{t.gameOver}</DialogTitle>
                     </DialogHeader>
                     <div className="py-2 sm:py-6 flex flex-col items-center w-full">
                         {winner !== null ? (
                             <div className="w-full flex flex-col items-center">
                                 <p className="text-xl font-bold text-green-600 mb-6">{formatString(t.playerWins, { index: winner })}</p>
 
-                                <div className="w-full bg-gray-50 p-2 sm:p-6 rounded-xl border shadow-inner flex flex-col items-center">
+                                <div className="w-full bg-green-950/5 p-2 sm:p-6 rounded-2xl border border-green-900/15 shadow-inner flex flex-col items-center">
                                     <p className="text-sm text-gray-500 mb-2 self-start px-2 sm:px-4">{t.winningHand}</p>
                                     <div className="w-full flex justify-center overflow-x-auto p-2 no-scrollbar">
                                         {/* Use the Hand component to render melds + hand properly */}
@@ -501,6 +558,6 @@ export const MahjongTable = () => {
                 </DialogContent>
             </Dialog>
 
-        </div>
+        </motion.div>
     );
 };

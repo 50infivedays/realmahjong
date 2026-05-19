@@ -39,7 +39,7 @@ export const Navbar = () => {
     if (shouldHideNavbar) return null;
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 h-16 bg-green-900/95 backdrop-blur-sm border-b border-green-800 shadow-lg flex items-center justify-between px-4 sm:px-8 text-white">
+        <nav className="fixed top-0 left-0 right-0 z-50 h-16 bg-green-950/80 backdrop-blur-md border-b border-white/10 shadow-[0_8px_32px_oklch(0.12_0.02_155/0.4)] flex items-center justify-between px-4 sm:px-8 text-white">
             {/* Left: Logo and Title */}
             <Link
                 href="/"
@@ -56,7 +56,7 @@ export const Navbar = () => {
                         priority
                     />
                 </div>
-                <span className="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
+                <span className="font-display text-xl sm:text-2xl font-bold tracking-tight text-[var(--mahjong-gold)]">
                     RealMahjong
                 </span>
             </Link>

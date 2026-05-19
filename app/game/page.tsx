@@ -9,8 +9,8 @@ export default function GamePage() {
 
   return (
     <main className={cn(
-      "w-full h-full overflow-hidden bg-green-800",
-      isMobile ? "fixed inset-0 z-50" : "pt-16 h-screen"
+      "w-full min-h-[100dvh] overflow-hidden mahjong-felt",
+      isMobile ? "fixed inset-0 z-50 h-[100dvh]" : "pt-16 h-[100dvh]"
     )}> 
       <MahjongTable />
     </main>

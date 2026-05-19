@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { defaultSiteMetadata } from "@/lib/seo/metadata";
+import { getGlobalJsonLd } from "@/lib/seo/json-ld";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,57 +17,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://realmahjong.vercel.app";
-const shareImagePath = "/icon.png";
-const twitterImagePath = "/icon.png";
-const twitterHandle =
-  process.env.NEXT_PUBLIC_TWITTER_HANDLE || "@RealMahjong";
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800", "900"],
+});
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: {
-    template: "%s | RealMahjong",
-    default: "RealMahjong - Free Online Mahjong Game",
-  },
-  description: "Play RealMahjong online free. A pure frontend authentic Mahjong game with AI opponents. Features automatic sorting, multi-language support, and traditional gameplay.",
-  keywords: ["Mahjong", "Mahjong Game", "free mahjong", "Browser Game", "麻将", "在线麻将", "free", "free mahjong games", "real mahjong"],
-  authors: [{ name: "RealMahjong Team" }],
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
-    title: "RealMahjong",
-    description: "Play authentic Mahjong online against AI.",
-    url: "/",
-    siteName: "RealMahjong",
-    locale: "en_US",
-    alternateLocale: ["zh_CN", "ja_JP"],
-    type: "website",
-    images: [
-      {
-        url: shareImagePath,
-        width: 512,
-        height: 512,
-        alt: "RealMahjong icon",
-        type: "image/png",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "RealMahjong",
-    description: "Authentic Mahjong Game",
-    site: twitterHandle,
-    creator: twitterHandle,
-    images: [
-      {
-        url: twitterImagePath,
-        alt: "RealMahjong icon",
-      },
-    ],
-  },
-};
+export const metadata: Metadata = defaultSiteMetadata;
 
 export default function RootLayout({
   children,
@@ -74,8 +33,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased`}
       >
+        <JsonLd data={getGlobalJsonLd()} />
         <GoogleAnalytics />
         <Navbar />
         {children}

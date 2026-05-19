@@ -1,4 +1,7 @@
+"use client";
+
 import React from 'react';
+import { motion } from 'framer-motion';
 import { TileType, Meld } from '@/lib/mahjong/types';
 import { Tile } from './Tile';
 import { cn } from '@/lib/utils';
@@ -28,11 +31,11 @@ export const Hand: React.FC<HandProps> = ({ tiles, melds, onTileClick, isCurrent
     <div className={cn("flex gap-2 items-end", isWinningHand && "scale-[0.6] sm:scale-[0.7] md:scale-[0.85] lg:scale-100 origin-center")}>
         {/* Melds (Exposed) */}
         {melds.map((meld, idx) => (
-            <div key={idx} className={cn("flex gap-0.5 p-1 rounded shadow-sm", isWinningHand ? "" : "bg-gray-100")}>
+            <motion.div key={idx} className={cn("flex gap-0.5 p-1 rounded-md", isWinningHand ? "" : "bg-black/20 border border-white/5 rounded-lg")}>
                 {meld.tiles.map(t => (
                     <Tile key={t.id} tile={t} small={!isWinningHand} />
                 ))}
-            </div>
+            </motion.div>
         ))}
 
         {/* Hand Tiles */}
